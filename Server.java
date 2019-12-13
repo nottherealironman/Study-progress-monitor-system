@@ -19,16 +19,25 @@ public class Server {
 }
 class Connection extends Thread {
 	
-	ObjectInputStream in;
-	ObjectOutputStream out;
-	Socket clientSocket;
+	ObjectInputStream inObj;
+	ObjectOutputStream outObj;
+	DataInputStream inData;
+	DataOutputStream outData;
+	Socket s;
 	
 	public Connection (Socket aClientSocket) {
 		
 		try {
-			clientSocket = aClientSocket;
-			in = new ObjectInputStream( clientSocket.getInputStream());
-			out =new ObjectOutputStream( clientSocket.getOutputStream());
+			s = aClientSocket;
+			/*in = new ObjectInputStream( clientSocket.getInputStream());
+			out =new ObjectOutputStream( clientSocket.getOutputStream());*/
+			/*inObj = new ObjectInputStream(s.getInputStream());
+	        outObj =new ObjectOutputStream(s.getOutputStream());*/
+
+	        inData = new DataInputStream(s.getInputStream());
+	        outData = new DataOutputStream(s.getOutputStream());
+			/*in = new DataInputStream(clientSocket.getInputStream());
+	      	out = new DataOutputStream(clientSocket.getOutputStream());*/
 			this.start();
 		} catch(IOException e) {System.out.println("Connection:"+e.getMessage());}
 	}
@@ -37,7 +46,7 @@ class Connection extends Thread {
 		
 		try {			                 
 
-			Book book1 = (Book)in.readObject();	
+			/*Book book1 = (Book)in.readObject();	
 			
 			System.out.println("The Received Book Object:");
 			System.out.println("====================================");
@@ -60,23 +69,37 @@ class Connection extends Thread {
 			System.out.println("Book Title: " + book.getTitle());
 			System.out.println("Book Author: " + book.getAuthor());
 			System.out.println("Publish Year: " + book.getYear());
-			System.out.println("ISBN: " + book.getISBN());	
+			System.out.println("ISBN: " + book.getISBN());	*/
+			String request = inData.readUTF();
+			System.out.println("Request : "+request);
 
-			DatabaseUtility dataObj = new DatabaseUtility();
+			/*DatabaseUtility dataObj = new DatabaseUtility();
 	        //dataObj = new DatabaseUtility();
 	        dataObj.createDBtables();
 	        ArrayList<String> result = dataObj.fetchAssessmentList(1);
 	        out.writeUTF("Server received:"+result);
 	        for(String res: result){
 	            System.out.println(res);
-	        }
+	        }*/
 
 
-		}catch (EOFException e){System.out.println("EOF:"+e.getMessage());
-		} catch(IOException e) {System.out.println("readline:"+e.getMessage());
-		} catch(ClassNotFoundException ex){
+		}
+		catch (EOFException e){
+			System.out.println("EOF:"+e.getMessage());
+		} 
+		catch(IOException e) {
+			System.out.println("readline:"+e.getMessage());
+		} 
+		/*catch(ClassNotFoundException ex){
 					 ex.printStackTrace();
-		}finally{ try {clientSocket.close();}catch (IOException e){/*close failed*/}}
+		}*/
+		finally{ 
+			try {
+			s.close();
+			}
+			catch (IOException e){
+			/*close failed*/}
+		}
 		
 
 	}
