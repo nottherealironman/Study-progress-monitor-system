@@ -1,5 +1,4 @@
 import java.io.Serializable;
-import java.util.LinkedList;
 
 public class Assessment implements Serializable
  {
@@ -9,8 +8,12 @@ public class Assessment implements Serializable
 	private String format;
 	private String dueDate;
 	
-	public Assessment() {
-	     
+	public Assessment(String assessmentID, String type, String topic, String format, String dueDate) {
+	     this.assessmentID = assessmentID;
+	     this.type = type;
+	     this.topic = topic;
+	     this.format = format;
+	     this.dueDate = dueDate;
 	}
 
 	public String getAssessmentID() {

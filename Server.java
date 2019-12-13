@@ -1,6 +1,7 @@
 import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class Server {
 	public static void main (String args[]) {
@@ -45,7 +46,21 @@ class Connection extends Thread {
 	public void run(){
 		
 		try {			                 
+			String request = inData.readUTF();
+			System.out.println("Request : "+request);
+			DatabaseUtility dataObj = new DatabaseUtility();
+	        dataObj.createDBtables();
 
+	        LinkedList<Subject> result = dataObj.fetchSubjectList();
+	        //out.writeUTF("Server received:"+result);
+	        //LinkedList<Assessment> result = dataObj.fetchAssessmentList(1);
+	        for(Subject res: result){
+	            System.out.println(res.getName());
+	        }
+			/*switch(request){
+				case "Subject List":
+
+			}*/
 			/*Book book1 = (Book)in.readObject();	
 			
 			System.out.println("The Received Book Object:");
@@ -70,8 +85,7 @@ class Connection extends Thread {
 			System.out.println("Book Author: " + book.getAuthor());
 			System.out.println("Publish Year: " + book.getYear());
 			System.out.println("ISBN: " + book.getISBN());	*/
-			String request = inData.readUTF();
-			System.out.println("Request : "+request);
+			
 
 			/*DatabaseUtility dataObj = new DatabaseUtility();
 	        //dataObj = new DatabaseUtility();

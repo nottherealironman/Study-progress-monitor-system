@@ -304,9 +304,10 @@ public class DatabaseUtility {
         return true;
     }
     
-    public ArrayList<String> fetchAssessmentList(int subjectID){
+    public LinkedList<Assessment> fetchAssessmentList(int subjectID){
         PreparedStatement assessmentRec; 
-        ArrayList<String> result = new ArrayList<>();
+        LinkedList<Assessment> result = new LinkedList<>();
+        Assessment assessment;
         try {
             if  (dbConnection  == null)//connect to MySql ;
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
@@ -316,82 +317,48 @@ public class DatabaseUtility {
             ResultSet rs = assessmentRec.executeQuery();
             
             while (rs.next()) {
-                result.add(rs.getString("AssessmentID"));
+                /*result.add(rs.getString("AssessmentID"));
                 result.add(rs.getString("Type"));
                 result.add(rs.getString("Topic"));
                 result.add(rs.getString("Format"));
-                result.add(rs.getString("DueDate"));
+                result.add(rs.getString("DueDate"));*/
+                assessment = new Assessment(rs.getString("AssessmentID"), rs.getString("Type"), rs.getString("Topic"), rs.getString("Format"), rs.getString("DueDate"));
+                result.add(assessment);
             }
         }catch(SQLException e) {
             System.out.println("Connection Failed! Check output console");
             System.out.println("SQLException: " + e.getMessage());
             System.out.println("SQLState: " + e.getSQLState());
 		e.printStackTrace();
-	}
+	   }
         return result;
     }
-    
-    /**
-     *  access user list / use for various data structure
-     * @return 
-     */
-    public List<List<String>> selectRecrds(){
-        PreparedStatement displayRecord; 
-        List<List<String>> resList = new LinkedList<>();
-        try {
-            if  (dbConnection  == null) //connect to MySql ;
-                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
-                // get the list of Energy_needs
-                displayRecord   = dbConnection.prepareStatement( "SELECT  * FROM Energy_needs"); 
-                ResultSet rs = displayRecord.executeQuery();
-                ResultSetMetaData metadata = rs.getMetaData();          
-                List<String> temRes;
-                while (rs.next()) {
-                    temRes = new ArrayList<>();
-                    temRes.add(rs.getString("FullName"));
-                    temRes.add(String.valueOf(rs.getDouble("Height")) + "m");
-                    temRes.add(String.valueOf(rs.getDouble("Weight")) + "kg");
-                    temRes.add(rs.getString("Gender"));
-                    temRes.add(rs.getString("AgeGroup"));
-                    temRes.add(rs.getString("PALDsct"));
-                    temRes.add(String.valueOf(rs.getDouble("PAL")));
-                    temRes.add(String.valueOf(rs.getDouble("EnergyNeeds")) + "megajoules");
-                    resList.add(temRes);
-                }   
-        }catch(SQLException e) {
-            System.out.println("Connection Failed! Check output console");
-            System.out.println("SQLException: " + e.getMessage());
-            System.out.println("SQLState: " + e.getSQLState());
-            e.printStackTrace();
-	}
-        
-        return resList;
-    }  
-    
-    /**
-     * access user list
-     * @return 
-     */
-    public ArrayList<String> selectStdRecrds(){
-        PreparedStatement displayRecord; 
-        ArrayList<String> temRes = new ArrayList<>();
+
+    public LinkedList<Subject> fetchSubjectList(){
+        PreparedStatement subjRec; 
+        PreparedStatement assessmentRec; 
+        LinkedList<Subject> result = new LinkedList<>();
+        LinkedList<Assessment> assessment;
+        Subject subj;
         try {
             if  (dbConnection  == null)//connect to MySql ;
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
             // get the list of Energy_needs
-            displayRecord   = dbConnection.prepareStatement( "SELECT  * FROM Students"); 
-            ResultSet rs = displayRecord.executeQuery();
-            ResultSetMetaData metadata = rs.getMetaData();          
+            subjRec   = dbConnection.prepareStatement( "SELECT * FROM subject"); 
+            ResultSet rs = subjRec.executeQuery();
             
             while (rs.next()) {
-                temRes.add(rs.getString("ID")+" "+rs.getString("FullName"));
+                //result.add(rs.getString("Name"));
+                assessment = fetchAssessmentList(rs.getInt("SubjectID"));
+                subj = new Subject(rs.getString("Name"), assessment);
+                result.add(subj);
             }
         }catch(SQLException e) {
             System.out.println("Connection Failed! Check output console");
             System.out.println("SQLException: " + e.getMessage());
             System.out.println("SQLState: " + e.getSQLState());
-		e.printStackTrace();
-	}
-        return temRes;
-    }  
+        e.printStackTrace();
+       }
+        return result;
+    }
 }
