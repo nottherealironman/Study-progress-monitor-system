@@ -32,8 +32,8 @@ class Connection extends Thread {
 			s = aClientSocket;
 			/*in = new ObjectInputStream( clientSocket.getInputStream());
 			out =new ObjectOutputStream( clientSocket.getOutputStream());*/
-			/*inObj = new ObjectInputStream(s.getInputStream());
-	        outObj =new ObjectOutputStream(s.getOutputStream());*/
+			inObj = new ObjectInputStream(s.getInputStream());
+	        outObj =new ObjectOutputStream(s.getOutputStream());
 
 	        inData = new DataInputStream(s.getInputStream());
 	        outData = new DataOutputStream(s.getOutputStream());
@@ -46,22 +46,24 @@ class Connection extends Thread {
 	public void run(){
 		
 		try {			                 
-			String request = inData.readUTF();
-			System.out.println("Request : "+request);
+			/*String request = inData.readUTF();
+			System.out.println("Request : "+request);*/
 			DatabaseUtility dataObj = new DatabaseUtility();
 	        dataObj.createDBtables();
 
 	        LinkedList<Subject> result = dataObj.fetchSubjectList();
 	        //out.writeUTF("Server received:"+result);
 	        //LinkedList<Assessment> result = dataObj.fetchAssessmentList(1);
-	        for(Subject res: result){
-	            System.out.println(res.getName());
-	        }
+	        SubjectList subjList = new SubjectList(result);
+	        /*for(Subject res: result){
+	            subjList = (res.getName());
+	        }*/
+	        outObj.writeObject(subjList);
 			/*switch(request){
 				case "Subject List":
 
 			}*/
-			/*Book book1 = (Book)in.readObject();	
+			/*Book book1 = (Book)inObj.readObject();	
 			
 			System.out.println("The Received Book Object:");
 			System.out.println("====================================");
@@ -77,7 +79,7 @@ class Connection extends Thread {
 			book.setPublisher(new String("Thomson Course Technology"));
 			book.setYear(new String("2005"));
 			book.setISBN(new String("0-619-13039-3"));
-			out.writeObject(book);
+			outObj.writeObject(book);
 			
 			System.out.println("The Sent Book Object:");
 			System.out.println("====================================");

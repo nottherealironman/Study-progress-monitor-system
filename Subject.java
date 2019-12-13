@@ -27,5 +27,13 @@ public class Subject implements Serializable
 		this.assessment = assessment;
 	}
 
+	@Override
+	public String toString()
+     {
+     	String assessment = "";
+        for (int i = 0; i < this.assessment.size(); i++)
+            assessment += this.assessment.get(i).toString();
+        return String.format("%s  %s \n", this.getName(), assessment);
+     }
   }
 

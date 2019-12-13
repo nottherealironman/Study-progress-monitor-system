@@ -1,6 +1,8 @@
 import java.net.*;
 import java.io.*;
 import java.util.Scanner;
+import java.util.ArrayList;
+import java.util.LinkedList;
 
 public class Client {
 
@@ -10,22 +12,45 @@ public class Client {
     Socket s = null;
     
     try{
-      
       int serverPort = 8888;
       
       s = new Socket("localhost", serverPort);    
       
-      /*ObjectInputStream in = null;
-      ObjectOutputStream out =null;
-      */
-      /*ObjectInputStream inObj = new ObjectInputStream(s.getInputStream());
-      ObjectOutputStream outObj =new ObjectOutputStream(s.getOutputStream());*/
+      ObjectInputStream inObj = null;
+      ObjectOutputStream outObj =null;
+      
+      outObj =new ObjectOutputStream(s.getOutputStream());
+      inObj = new ObjectInputStream( s.getInputStream());
 
-      DataInputStream inData = new DataInputStream(s.getInputStream());
-      DataOutputStream outData = new DataOutputStream(s.getOutputStream());
-      System.out.println("HW");
+      /*DataInputStream inData = new DataInputStream(s.getInputStream());
+      DataOutputStream outData = new DataOutputStream(s.getOutputStream());*/
       Scanner sc = new Scanner(System.in);
       int userType;
+
+    
+      /*Book book = new Book();
+      book.setTitle(new String("Network Security"));
+      book.setAuthor(new String("Mark Ciampa"));
+      book.setPublisher(new String("Thomson Course Technology"));
+      book.setYear(new String("2005"));
+      book.setISBN(new String("0-619-21566-6"));
+      outObj.writeObject(book); 
+      
+      System.out.println("The Sent Book Object:");
+      System.out.println("====================================");
+      System.out.println("Book Title: " + book.getTitle());
+      System.out.println("Book Author: " + book.getAuthor());
+      System.out.println("Publish Year: " + book.getYear());
+      System.out.println("ISBN: " + book.getISBN());
+      System.out.println();
+      
+      Book book1 = (Book)inObj.readObject();     
+      System.out.println("The Received Book Object:");
+      System.out.println("====================================");
+      System.out.println("Book Title: " + book1.getTitle());
+      System.out.println("Book Author: " + book1.getAuthor());
+      System.out.println("Publish Year: " + book1.getYear());
+      System.out.println("ISBN: " + book1.getISBN()); */
 
       do{
         System.out.println("\n\nWelcome to Study Progress Monitor System\n");
@@ -58,7 +83,10 @@ public class Client {
                 switch(optInput){
                   case 1:
                       System.out.println(viewAsses);
-                      outData.writeUTF(subjListRequest);
+                      //outData.writeUTF(subjListRequest);
+                      SubjectList subjList = (SubjectList) inObj.readObject();  
+                      //System.out.println("====================================");
+                      System.out.println("subjList Title: " + subjList);
                       break;
                   case 2:
                       System.out.println(viewGrd);
@@ -91,36 +119,9 @@ public class Client {
                 break;
             }
 
-        /*while(true){
-          
-            
-
-          }*/
       }while(userType!=0);
 
-      /*Book book = new Book();
-      book.setTitle(new String("Network Security"));
-      book.setAuthor(new String("Mark Ciampa"));
-      book.setPublisher(new String("Thomson Course Technology"));
-      book.setYear(new String("2005"));
-      book.setISBN(new String("0-619-21566-6"));
-      out.writeObject(book); 
       
-      System.out.println("The Sent Book Object:");
-      System.out.println("====================================");
-      System.out.println("Book Title: " + book.getTitle());
-      System.out.println("Book Author: " + book.getAuthor());
-      System.out.println("Publish Year: " + book.getYear());
-      System.out.println("ISBN: " + book.getISBN());
-      System.out.println();
-      
-      Book book1 = (Book)in.readObject();     
-      System.out.println("The Received Book Object:");
-      System.out.println("====================================");
-      System.out.println("Book Title: " + book1.getTitle());
-      System.out.println("Book Author: " + book1.getAuthor());
-      System.out.println("Publish Year: " + book1.getYear());
-      System.out.println("ISBN: " + book1.getISBN()); */
       
     }
     catch (UnknownHostException e){
@@ -132,9 +133,9 @@ public class Client {
     catch (IOException e){
       System.out.println("readline:"+e.getMessage());
     }
-    /*catch(ClassNotFoundException ex){
+    catch(ClassNotFoundException ex){
            ex.printStackTrace();
-    }*/
+    }
     finally {
       if(s!=null) 
         try {

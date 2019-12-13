@@ -56,5 +56,11 @@ public class Assessment implements Serializable
 		this.dueDate = dueDate;
 	}
 
+	@Override
+    public String toString(){
+        return String.format("AssessmentID:%s Type:%s Topic:%s Format:%s Due date:%s \n", 
+                this.assessmentID, this.type, this.topic, this.format, this.dueDate);
+    }
+
   }
 
