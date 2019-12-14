@@ -4,15 +4,17 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 public class Server {
+	private static int clientCount;
 	public static void main (String args[]) {
 		
 		try{
 			int serverPort = 8888; 
 			ServerSocket listenSocket = new ServerSocket(serverPort);
-			
+			int i=0;
 			while(true) {
 				Socket clientSocket = listenSocket.accept();
-				Connection c = new Connection(clientSocket);
+				clientCount++;
+				Connection c = new Connection(clientSocket, i++,clientCount);
 			}
 
 		} catch(IOException e) {System.out.println("Listen socket:"+e.getMessage());}
@@ -25,8 +27,10 @@ class Connection extends Thread {
 	DataInputStream inData;
 	DataOutputStream outData;
 	Socket s;
+	int thrdn;
+	int clientCount;
 	
-	public Connection (Socket aClientSocket) {
+	public Connection (Socket aClientSocket, int tn, int client) {
 		
 		try {
 			s = aClientSocket;
@@ -46,58 +50,31 @@ class Connection extends Thread {
 	public void run(){
 		
 		try {			                 
-			/*String request = inData.readUTF();
-			System.out.println("Request : "+request);*/
+			String request = inData.readUTF();
+			System.out.println("Request : "+request);
 			DatabaseUtility dataObj = new DatabaseUtility();
 	        dataObj.createDBtables();
 
-	        LinkedList<Subject> result = dataObj.fetchSubjectList();
-	        //out.writeUTF("Server received:"+result);
-	        //LinkedList<Assessment> result = dataObj.fetchAssessmentList(1);
-	        SubjectList subjList = new SubjectList(result);
-	        /*for(Subject res: result){
-	            subjList = (res.getName());
-	        }*/
-	        outObj.writeObject(subjList);
-			/*switch(request){
-				case "Subject List":
+	        
 
-			}*/
-			/*Book book1 = (Book)inObj.readObject();	
-			
-			System.out.println("The Received Book Object:");
-			System.out.println("====================================");
-			System.out.println("Book Title: " + book1.getTitle());
-			System.out.println("Book Author: " + book1.getAuthor());
-			System.out.println("Publish Year: " + book1.getYear());
-			System.out.println("ISBN: " + book1.getISBN());	
-			System.out.println();
+	        
 
-			Book book = new Book();
-			book.setTitle(new String("Firewalls and Network Security"));
-			book.setAuthor(new String("Greg Holden"));
-			book.setPublisher(new String("Thomson Course Technology"));
-			book.setYear(new String("2005"));
-			book.setISBN(new String("0-619-13039-3"));
-			outObj.writeObject(book);
-			
-			System.out.println("The Sent Book Object:");
-			System.out.println("====================================");
-			System.out.println("Book Title: " + book.getTitle());
-			System.out.println("Book Author: " + book.getAuthor());
-			System.out.println("Publish Year: " + book.getYear());
-			System.out.println("ISBN: " + book.getISBN());	*/
-			
-
-			/*DatabaseUtility dataObj = new DatabaseUtility();
-	        //dataObj = new DatabaseUtility();
-	        dataObj.createDBtables();
-	        ArrayList<String> result = dataObj.fetchAssessmentList(1);
-	        out.writeUTF("Server received:"+result);
-	        for(String res: result){
-	            System.out.println(res);
-	        }*/
-
+	        while (request!=null){
+				switch(request){
+					case "Subject List":
+						System.out.println("Subject List called");
+						LinkedList<Subject> subjResult = dataObj.fetchSubjectList();
+	        			SubjectList subjList = new SubjectList(subjResult);
+				        outObj.writeObject(subjList);
+				        break;
+				    case "Student List":
+				    System.out.println("Student List called");
+				    	LinkedList<Student> studResult = dataObj.fetchStudentList();
+						StudentList studList = new StudentList(studResult);
+				    	outObj.writeObject(studList);
+				    	break;
+				}
+			}
 
 		}
 		catch (EOFException e){

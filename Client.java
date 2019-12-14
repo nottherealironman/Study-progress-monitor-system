@@ -22,35 +22,11 @@ public class Client {
       outObj =new ObjectOutputStream(s.getOutputStream());
       inObj = new ObjectInputStream( s.getInputStream());
 
-      /*DataInputStream inData = new DataInputStream(s.getInputStream());
-      DataOutputStream outData = new DataOutputStream(s.getOutputStream());*/
+      DataInputStream inData = new DataInputStream(s.getInputStream());
+      DataOutputStream outData = new DataOutputStream(s.getOutputStream());
+
       Scanner sc = new Scanner(System.in);
       int userType;
-
-    
-      /*Book book = new Book();
-      book.setTitle(new String("Network Security"));
-      book.setAuthor(new String("Mark Ciampa"));
-      book.setPublisher(new String("Thomson Course Technology"));
-      book.setYear(new String("2005"));
-      book.setISBN(new String("0-619-21566-6"));
-      outObj.writeObject(book); 
-      
-      System.out.println("The Sent Book Object:");
-      System.out.println("====================================");
-      System.out.println("Book Title: " + book.getTitle());
-      System.out.println("Book Author: " + book.getAuthor());
-      System.out.println("Publish Year: " + book.getYear());
-      System.out.println("ISBN: " + book.getISBN());
-      System.out.println();
-      
-      Book book1 = (Book)inObj.readObject();     
-      System.out.println("The Received Book Object:");
-      System.out.println("====================================");
-      System.out.println("Book Title: " + book1.getTitle());
-      System.out.println("Book Author: " + book1.getAuthor());
-      System.out.println("Publish Year: " + book1.getYear());
-      System.out.println("ISBN: " + book1.getISBN()); */
 
       do{
         System.out.println("\n\nWelcome to Study Progress Monitor System\n");
@@ -67,29 +43,37 @@ public class Client {
         String viewGrd = "Choose the Student from below list to view assessment grades:\n";
         String setGrd = "Choose the Student from below list to set grades:\n";
         String subjListRequest = "Subject List";
+        String studListRequest = "Student List";
         int optInput;
 
         switch(userType){
             // Administrator 
             case 1:
-                System.out.println("\nWelcome Administrator");
+              System.out.println("\nWelcome Administrator");
+              do{
+                
                 System.out.println("\n"+optOne);
                 System.out.println(optTwo);
                 System.out.println(optThree);
                 System.out.println("\nSelect your option or press 0 to exit:");
 
                 optInput = sc.nextInt();
-
+                SubjectList subjList;
+                StudentList studList;
                 switch(optInput){
                   case 1:
                       System.out.println(viewAsses);
-                      //outData.writeUTF(subjListRequest);
-                      SubjectList subjList = (SubjectList) inObj.readObject();  
+                      outData.writeUTF("Subject List");
+                      subjList = (SubjectList) inObj.readObject();  
                       //System.out.println("====================================");
-                      System.out.println("subjList Title: " + subjList);
+                      System.out.println("subjList : " + subjList);
                       break;
                   case 2:
                       System.out.println(viewGrd);
+                      outData.writeUTF("Student List");
+                      studList = (StudentList) inObj.readObject();  
+                      //System.out.println("====================================");
+                      System.out.println("studList : " + studList);
                       break;
                   case 3:
                       System.out.println(setGrd);
@@ -97,6 +81,9 @@ public class Client {
                   case 0:
                     System.exit(0);
                 }
+              }while(optInput !=0);
+            
+                
                 break;
 
             // Guest

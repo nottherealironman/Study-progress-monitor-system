@@ -336,7 +336,6 @@ public class DatabaseUtility {
 
     public LinkedList<Subject> fetchSubjectList(){
         PreparedStatement subjRec; 
-        PreparedStatement assessmentRec; 
         LinkedList<Subject> result = new LinkedList<>();
         LinkedList<Assessment> assessment;
         Subject subj;
@@ -352,6 +351,33 @@ public class DatabaseUtility {
                 assessment = fetchAssessmentList(rs.getInt("SubjectID"));
                 subj = new Subject(rs.getString("Name"), assessment);
                 result.add(subj);
+            }
+        }catch(SQLException e) {
+            System.out.println("Connection Failed! Check output console");
+            System.out.println("SQLException: " + e.getMessage());
+            System.out.println("SQLState: " + e.getSQLState());
+        e.printStackTrace();
+       }
+        return result;
+    }
+
+    public LinkedList<Student> fetchStudentList(){
+        PreparedStatement studRec; 
+        LinkedList<Student> result = new LinkedList<>();
+        LinkedList<Subject> subjects;
+        Student stud;
+        try {
+            if  (dbConnection  == null)//connect to MySql ;
+                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
+            // get the list of Student
+            studRec   = dbConnection.prepareStatement( "SELECT * FROM student"); 
+            ResultSet rs = studRec.executeQuery();
+            
+            while (rs.next()) {
+                //result.add(rs.getString("Name"));
+                subjects = fetchSubjectList();
+                stud = new Student(rs.getString("FullName"),rs.getInt("YearLevel"), subjects);
+                result.add(stud);
             }
         }catch(SQLException e) {
             System.out.println("Connection Failed! Check output console");
