@@ -8,6 +8,7 @@ public class Client {
   private static SubjectList subjList;
   private static StudentList studList;
   private static LinkedList<Subject> subjects;
+  private static LinkedList<Student> students;
 
   private static void displayAssessment(String subject){
     System.out.printf("Assignment of %s:\n\n",subject);
@@ -19,6 +20,32 @@ public class Client {
         }
       }
     }
+  }
+
+  private static void displaySubject(String student){
+    int optSubj;
+    Scanner sc = new Scanner(System.in);
+    do{
+      System.out.printf("Choose the subject from list below to view grades of %s:\n\n",student);
+   
+      for (Student stud : students) {
+        if(stud.getFullName().equals(student)){
+          int i = 1;
+          for (Subject subject : stud.getSubject()) {
+              System.out.println(i+". "+subject.getName());
+              i++;
+          }
+        }
+      }
+      System.out.println("\nSelect subject or press 8 to go back or press 0 to exit:");
+      optSubj = sc.nextInt();
+                
+      switch(optSubj){
+
+      }
+
+    }while(optSubj!=0);
+    
   }
   
   public static void main (String args[]) {
@@ -59,8 +86,8 @@ public class Client {
         String subjListRequest = "Subject List";
         String studListRequest = "Student List";
         int optInput;
-        
         int optSubj;
+        int optStud;
 
         switch(userType){
             // Administrator 
@@ -84,9 +111,11 @@ public class Client {
                         //getClass().getName()
                         //System.out.println("subjList : " + subjList.getSubject());
                         subjects = subjList.getSubject();
+                        String[] subjNames = new String[subjects.size()+1];
                         int i = 1;
                         for (Subject subj : subjects) {
                             System.out.println(i+". "+subj.getName());
+                            subjNames[i] = subj.getName();
                             i++;
                         }
                         System.out.println("\nSelect subject or press 8 to go back or press 0 to exit:");
@@ -94,24 +123,24 @@ public class Client {
 
                         switch(optSubj){
                           case 1:
-                              displayAssessment("English");
+                              displayAssessment(subjNames[optSubj]);
                               break;
-
                           case 2:
-                              displayAssessment("Maths B");
+                              displayAssessment(subjNames[optSubj]);
                               break;
                           case 3:
-                              displayAssessment("Biology");
+                              displayAssessment(subjNames[optSubj]);
                               break;
                           case 4:
-                              displayAssessment("Business and Communication Technologies");
+                              displayAssessment(subjNames[optSubj]);
                               break;
                           case 5:
-                              displayAssessment("Religion and Ethics");
+                              displayAssessment(subjNames[optSubj]);
                               break;
                           case 0:
                               System.exit(0);
                         }
+                        // Go back to previous menu if 8 is pressed
                         if(optSubj == 8){
                           break;
                         }
@@ -120,11 +149,52 @@ public class Client {
                       
                       break;
                   case 2:
-                      System.out.println(viewGrd);
-                      outData.writeUTF("Student List");
-                      studList = (StudentList) inObj.readObject();  
-                      //System.out.println("====================================");
-                      System.out.println("studList : " + studList);
+
+                      do{
+                        System.out.println(viewGrd);
+                        outData.writeUTF("Student List");
+                        studList = (StudentList) inObj.readObject();  
+                        //System.out.println("====================================");
+                        //System.out.println("studList : " + studList);
+
+                        students = studList.getStudent();
+                        String[] studNames = new String[students.size()+1];
+                        int i = 1;
+                        for (Student stud : students) {
+                            System.out.println(i+". "+stud.getFullName());
+                            studNames[i] = stud.getFullName();
+                            i++;
+                        }
+                        System.out.println("\nSelect student or press 8 to go back or press 0 to exit:");
+                        optStud = sc.nextInt();
+
+                        switch(optStud){
+                          case 1:
+                              displaySubject(studNames[optStud]);
+                              break;
+
+                          case 2:
+                              displaySubject(studNames[optStud]);
+                              break;
+                          case 3:
+                              displaySubject(studNames[optStud]);
+                              break;
+                          case 4:
+                              displaySubject(studNames[optStud]);
+                              break;
+                          case 5:
+                              displaySubject(studNames[optStud]);
+                              break;
+                          case 0:
+                              System.exit(0);
+                        }
+                        // Go back to previous menu if 8 is pressed
+                        if(optStud == 8){
+                          break;
+                        }
+
+                      }while(optStud != 0);
+
                       break;
                   case 3:
                       System.out.println(setGrd);
