@@ -29,6 +29,8 @@ class Connection extends Thread {
 	Socket s;
 	int thrdn;
 	int clientCount;
+	DatabaseUtility dataObj = new DatabaseUtility();
+	String request;
 	
 	public Connection (Socket aClientSocket, int tn, int client) {
 		
@@ -50,16 +52,12 @@ class Connection extends Thread {
 	public void run(){
 		
 		try {			                 
-			String request = inData.readUTF();
+			
 			System.out.println("Request : "+request);
-			DatabaseUtility dataObj = new DatabaseUtility();
+			
 	        dataObj.createDBtables();
 
-	        
-
-	        
-
-	        while (request!=null){
+	        while ((request= inData.readUTF())!=null){
 				switch(request){
 					case "Subject List":
 						System.out.println("Subject List called");
