@@ -30,6 +30,10 @@ class Connection extends Thread {
 	int thrdn;
 	int clientCount;
 	DatabaseUtility dataObj = new DatabaseUtility();
+	LinkedList<Subject> subjResult;
+	LinkedList<Student> studResult;
+	SubjectList subjList;
+	StudentList studList;
 	String request;
 	
 	public Connection (Socket aClientSocket, int tn, int client) {
@@ -59,18 +63,23 @@ class Connection extends Thread {
 
 	        while ((request= inData.readUTF())!=null){
 				switch(request){
-					case "Subject List":
-						System.out.println("Subject List called");
-						LinkedList<Subject> subjResult = dataObj.fetchSubjectList();
-	        			SubjectList subjList = new SubjectList(subjResult);
+					case "view-assessment-request":
+						//System.out.println("Subject List called");
+						subjResult = dataObj.fetchSubjectList();
+	        			subjList = new SubjectList(subjResult);
 				        outObj.writeObject(subjList);
 				        break;
-				    case "Student List":
-				    System.out.println("Student List called");
-				    	LinkedList<Student> studResult = dataObj.fetchStudentList();
-						StudentList studList = new StudentList(studResult);
+				    case "view-grade-request":
+				    	studResult = dataObj.fetchStudentList();
+						studList = new StudentList(studResult);
 				    	outObj.writeObject(studList);
 				    	break;
+
+				    case "set-grade-request":
+						studResult = dataObj.fetchStudentList();
+						studList = new StudentList(studResult);
+				    	outObj.writeObject(studList);
+				        break;
 				}
 			}
 

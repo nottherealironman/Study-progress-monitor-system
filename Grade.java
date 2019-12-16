@@ -36,5 +36,11 @@ public class Grade implements Serializable
 		this.skill = skill;
 	}
 
+	@Override
+    public String toString(){
+        return String.format(" Achievement:%s\n Knowledge:%s\n Skill:%s \n", 
+                this.achievement, this.knowledge, this.skill);
+    }
+
   }
 

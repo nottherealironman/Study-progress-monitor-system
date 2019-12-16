@@ -22,30 +22,61 @@ public class Client {
     }
   }
 
-  private static void displaySubject(String student){
-    int optSubj;
+  private static void displaySubject(String student, String option){
     Scanner sc = new Scanner(System.in);
+    int optSubj;
     do{
-      System.out.printf("Choose the subject from list below to view grades of %s:\n\n",student);
-   
+      System.out.printf("Choose the subject from list below to %s of %s:\n\n",option, student);
+      String[] subjNames = new String[6];
       for (Student stud : students) {
+        //subjNames = new String[stud.getSubject().size()+1];
         if(stud.getFullName().equals(student)){
           int i = 1;
           for (Subject subject : stud.getSubject()) {
               System.out.println(i+". "+subject.getName());
+              subjNames[i] = subject.getName();
               i++;
           }
         }
       }
+
       System.out.println("\nSelect subject or press 8 to go back or press 0 to exit:");
       optSubj = sc.nextInt();
-                
-      switch(optSubj){
-
+      
+      if (optSubj > 0 && optSubj <= 5) {
+          if(option.equals("view grade")){
+            viewGrade(student,subjNames[optSubj],optSubj);
+          }
+          else if(option.equals("set grade")){
+            setGrade(student,subjNames[optSubj],optSubj);
+          }
+      } 
+      // System exit
+      else if (optSubj == 0) {
+          System.exit(0);
+      }
+      // Go back to previous menu if 8 is pressed
+      else if (optSubj == 8) {
+          break;
+      } 
+      else {
+          System.out.println("Sorry, invalid option!");
       }
 
     }while(optSubj!=0);
     
+  }
+
+  private static void viewGrade(String student, String subject, int optSubj){            
+    /*switch(optSubj){
+
+    }*/
+    System.out.printf("view grade for %s in %s",student,subject);
+  }
+
+  private static void setGrade(String student, String subject, int optSubj){
+                
+    System.out.printf("set grade for %s in %s",student,subject);
   }
   
   public static void main (String args[]) {
@@ -103,10 +134,11 @@ public class Client {
                 optInput = sc.nextInt();
                 
                 switch(optInput){
+                  // View assessment
                   case 1:
                       do{
                         System.out.println(viewAsses);
-                        outData.writeUTF("Subject List");
+                        outData.writeUTF("view-assessment-request");
                         subjList = (SubjectList) inObj.readObject();  
                         //getClass().getName()
                         //System.out.println("subjList : " + subjList.getSubject());
@@ -149,10 +181,10 @@ public class Client {
                       
                       break;
                   case 2:
-
+                    // View grades
                       do{
                         System.out.println(viewGrd);
-                        outData.writeUTF("Student List");
+                        outData.writeUTF("view-grade-request");
                         studList = (StudentList) inObj.readObject();  
                         //System.out.println("====================================");
                         //System.out.println("studList : " + studList);
@@ -168,7 +200,9 @@ public class Client {
                         System.out.println("\nSelect student or press 8 to go back or press 0 to exit:");
                         optStud = sc.nextInt();
 
-                        switch(optStud){
+                        
+
+                        /*switch(optStud){
                           case 1:
                               displaySubject(studNames[optStud]);
                               break;
@@ -187,17 +221,81 @@ public class Client {
                               break;
                           case 0:
                               System.exit(0);
+                        }*/
+                        if(optStud >0 && optStud <=5){
+                          displaySubject(studNames[optStud],"view grade");
+                        }
+                        else if(optStud == 0){
+                          System.exit(0);
                         }
                         // Go back to previous menu if 8 is pressed
-                        if(optStud == 8){
+                        else if(optStud == 8){
                           break;
+                        }
+                        else{
+                          System.out.println("Sorry, invalid option!");
                         }
 
                       }while(optStud != 0);
 
                       break;
                   case 3:
-                      System.out.println(setGrd);
+                      //Set grades
+                      do{
+                        System.out.println(setGrd);
+                        outData.writeUTF("set-grade-request");
+                        studList = (StudentList) inObj.readObject();  
+                        //System.out.println("====================================");
+                        //System.out.println("studList : " + studList);
+
+                        students = studList.getStudent();
+                        String[] studNames = new String[students.size()+1];
+                        int i = 1;
+                        for (Student stud : students) {
+                            System.out.println(i+". "+stud.getFullName());
+                            studNames[i] = stud.getFullName();
+                            i++;
+                        }
+                        System.out.println("\nSelect student or press 8 to go back or press 0 to exit:");
+                        optStud = sc.nextInt();
+                        
+                        /*switch(optStud){
+                          case 1:
+                              displaySubject(studNames[optStud]);
+                              break;
+
+                          case 2:
+                              displaySubject(studNames[optStud]);
+                              break;
+                          case 3:
+                              displaySubject(studNames[optStud]);
+                              break;
+                          case 4:
+                              displaySubject(studNames[optStud]);
+                              break;
+                          case 5:
+                              displaySubject(studNames[optStud]);
+                              break;
+                          case 0:
+                              System.exit(0);
+                        }*/
+
+                        if(optStud >0 && optStud <=5){
+                          displaySubject(studNames[optStud],"set grade");
+                        }
+                        else if(optStud == 0){
+                          System.exit(0);
+                        }
+                        // Go back to previous menu if 8 is pressed
+                        else if(optStud == 8){
+                          break;
+                        }
+                        else{
+                          System.out.println("Sorry, invalid option!");
+                        }
+
+                      }while(optStud != 0);
+
                       break;
                   case 0:
                     System.exit(0);
