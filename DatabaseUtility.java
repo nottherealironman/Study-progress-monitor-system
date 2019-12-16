@@ -92,7 +92,7 @@ public class DatabaseUtility {
         STUDENTGRADE_TBL_QRY =  "CREATE TABLE `StudentGrade` (" +
                             "  `StudentID` int(10) NOT NULL," +
                             "  `SubjectID` int(10) NOT NULL," +
-                            "  `AssessmentID` int(10) NOT NULL," +
+                            "  `AssessmentID` varchar(255) NOT NULL," +
                             "  `GradeID` int(10) NOT NULL," +
                             "  PRIMARY KEY (`StudentID`,`SubjectID`,`AssessmentID`,`GradeID`)" +
                             ") ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;";
@@ -386,5 +386,78 @@ public class DatabaseUtility {
         e.printStackTrace();
        }
         return result;
+    }
+
+    public LinkedList<Grade> fetchGradeList(){
+        PreparedStatement gradeRec; 
+        LinkedList<Grade> result = new LinkedList<>();
+        //LinkedList<Subject> subjects;
+        Grade grade;
+        try {
+            if  (dbConnection  == null)//connect to MySql ;
+                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
+            // get the list of Student
+            gradeRec   = dbConnection.prepareStatement( "SELECT * FROM grade"); 
+            ResultSet rs = gradeRec.executeQuery();
+            
+            while (rs.next()) {
+                grade = new Grade(rs.getString("Achievement"),rs.getString("Knowledge"), rs.getString("Skill"));
+                result.add(grade);
+            }
+        }catch(SQLException e) {
+            System.out.println("Connection Failed! Check output console");
+            System.out.println("SQLException: " + e.getMessage());
+            System.out.println("SQLState: " + e.getSQLState());
+        e.printStackTrace();
+       }
+        return result;
+    }
+
+    public boolean insertStudentGrade(String student, String subject, String assessmentId, int grade){
+       
+       PreparedStatement addRecord;
+       PreparedStatement studentQuery;
+       PreparedStatement subjectQuery;
+       ResultSet rs;
+        try {
+           if (dbConnection  == null)// connect to MySql 
+              dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD); 
+             //String[][] result = this.readDataFile();
+             addRecord   = dbConnection.prepareStatement( "INSERT INTO studentgrade " +
+                        "(StudentID, SubjectID, AssessmentID, GradeID)" +
+                                   "VALUES (?,?,?,?)");  
+                studentQuery   = dbConnection.prepareStatement( "SELECT * FROM student WHERE FullName = ?"); 
+                studentQuery.setString(1, student);
+                rs = studentQuery.executeQuery();
+                
+                while (rs.next()) {
+                    System.out.println(rs.getString("StudentID"));
+                    int studentID = Integer.parseInt(rs.getString("StudentID"));
+                    addRecord.setInt(1, studentID);
+                }
+
+                subjectQuery   = dbConnection.prepareStatement( "SELECT * FROM subject WHERE Name = ?"); 
+                subjectQuery.setString(1, subject);
+                rs = subjectQuery.executeQuery();
+                
+                while (rs.next()) {
+                    System.out.println(rs.getString("SubjectID"));
+                    int subjectID = Integer.parseInt(rs.getString("SubjectID"));
+                    addRecord.setInt(2, subjectID);
+                }
+                
+                addRecord.setString(3, assessmentId);
+                addRecord.setInt(4, grade);
+                addRecord.executeUpdate(); 
+             
+        } 
+        catch(SQLException e) {
+                 System.out.println("Connection Failed! Check output console");
+                                    System.out.println("SQLException: " + e.getMessage());
+                                    System.out.println("SQLState: " + e.getSQLState());
+                 e.printStackTrace();
+                 return false;
+        }
+        return true;
     }
 }

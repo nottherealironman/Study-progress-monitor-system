@@ -7,8 +7,10 @@ import java.util.LinkedList;
 public class Client {
   private static SubjectList subjList;
   private static StudentList studList;
+  private static GradeList grdList;
   private static LinkedList<Subject> subjects;
   private static LinkedList<Student> students;
+  private static LinkedList<Grade> grades;
 
   private static void displayAssessment(String subject){
     System.out.printf("Assignment of %s:\n\n",subject);
@@ -22,7 +24,7 @@ public class Client {
     }
   }
 
-  private static void displaySubject(String student, String option){
+  private static void displaySubject(String student, String option, DataOutputStream outData, ObjectInputStream inObj){
     Scanner sc = new Scanner(System.in);
     int optSubj;
     do{
@@ -45,10 +47,10 @@ public class Client {
       
       if (optSubj > 0 && optSubj <= 5) {
           if(option.equals("view grade")){
-            viewGrade(student,subjNames[optSubj]);
+            viewGrade(student,subjNames[optSubj], outData, inObj);
           }
           else if(option.equals("set grade")){
-            setGrade(student,subjNames[optSubj]);
+            setGrade(student,subjNames[optSubj], outData, inObj);
           }
       } 
       // System exit
@@ -67,16 +69,17 @@ public class Client {
     
   }
 
-  private static void viewGrade(String student, String subject){            
+  private static void viewGrade(String student, String subject, DataOutputStream outData, ObjectInputStream inObj){            
     /*switch(optSubj){
 
     }*/
     System.out.printf("view grade for %s in %s",student,subject);
   }
 
-  private static void setGrade(String student, String subject){
+  private static void setGrade(String student, String subject, DataOutputStream outData, ObjectInputStream inObj){
     Scanner sc = new Scanner(System.in);
     int optAsmnt;
+    int optGrd;
     do{
       System.out.printf("Choose the assessment to set grade for %s in %s:\n\n",student,subject);
       String[] asmntID = new String[4];
@@ -92,7 +95,7 @@ public class Client {
                 asmntID[i] = asmnt.getAssessmentID();
                 i++;
               }
-              System.out.println();
+              //System.out.println();
             }
           }
         }
@@ -103,10 +106,46 @@ public class Client {
       
       if (optAsmnt > 0 && optAsmnt <= 3) {
         try {
-            System.out.println(asmntID[optAsmnt]);
+            while(true){
+              //String[] grdID = new String[6];
+              //asmntID[optAsmnt]
+              System.out.printf("Choose the grade from below list to set grade for %s in %s (%s):\n\n",student,subject,asmntID[optAsmnt]);
+              outData.writeUTF("grade-list-request");
+              grdList = (GradeList) inObj.readObject();
+              grades = grdList.getGrade();
+              int i = 1;
+              for(Grade grd: grades){
+                System.out.println(i+". "+grd.getAchievement());
+                i++;
+              }
+              System.out.println("\nSelect grade or press 8 to go back or press 0 to exit:");
+              optGrd = sc.nextInt();
+
+              if (optGrd > 0 && optGrd <= 5) {
+                outData.writeUTF("@set-grade-request@"+student+"&"+subject+"&"+asmntID[optAsmnt]+"&"+optGrd);
+              }
+              // System exit
+              else if (optGrd == 0) {
+                  System.exit(0);
+              }
+              // Go back to previous menu if 8 is pressed
+              else if (optGrd == 8) {
+                  break;
+              } 
+              else {
+                  System.out.println("Sorry, invalid option!");
+              }
+            }
+            
         }
         catch(ArrayIndexOutOfBoundsException exception) {
             System.out.println("Sorry, invalid option!");
+        }
+        catch (IOException e){
+          System.out.println("readline:"+e.getMessage());
+        }
+        catch(ClassNotFoundException ex){
+           ex.printStackTrace();
         }
           
       } 
@@ -135,11 +174,8 @@ public class Client {
       
       s = new Socket("localhost", serverPort);    
       
-      ObjectInputStream inObj = null;
-      ObjectOutputStream outObj =null;
-      
-      outObj =new ObjectOutputStream(s.getOutputStream());
-      inObj = new ObjectInputStream( s.getInputStream());
+      ObjectOutputStream outObj = new ObjectOutputStream( s.getOutputStream());;
+      ObjectInputStream inObj  =new ObjectInputStream(s.getInputStream());;
 
       DataInputStream inData = new DataInputStream(s.getInputStream());
       DataOutputStream outData = new DataOutputStream(s.getOutputStream());
@@ -231,7 +267,7 @@ public class Client {
                     // View grades
                       do{
                         System.out.println(viewGrd);
-                        outData.writeUTF("view-grade-request");
+                        outData.writeUTF("student-list-request");
                         studList = (StudentList) inObj.readObject();  
                         //System.out.println("====================================");
                         //System.out.println("studList : " + studList);
@@ -270,7 +306,7 @@ public class Client {
                               System.exit(0);
                         }*/
                         if(optStud >0 && optStud <=5){
-                          displaySubject(studNames[optStud],"view grade");
+                          displaySubject(studNames[optStud],"view grade", outData, inObj);
                         }
                         else if(optStud == 0){
                           System.exit(0);
@@ -290,7 +326,7 @@ public class Client {
                       //Set grades
                       do{
                         System.out.println(setGrd);
-                        outData.writeUTF("set-grade-request");
+                        outData.writeUTF("student-list-request");
                         studList = (StudentList) inObj.readObject();  
                         //System.out.println("====================================");
                         //System.out.println("studList : " + studList);
@@ -328,7 +364,7 @@ public class Client {
                         }*/
 
                         if(optStud >0 && optStud <=5){
-                          displaySubject(studNames[optStud],"set grade");
+                          displaySubject(studNames[optStud],"set grade",outData, inObj);
                         }
                         else if(optStud == 0){
                           System.exit(0);
@@ -374,8 +410,6 @@ public class Client {
 
       }while(userType!=0);
 
-      
-      
     }
     catch (UnknownHostException e){
       System.out.println("Socket:"+e.getMessage());

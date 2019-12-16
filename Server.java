@@ -2,6 +2,7 @@ import java.net.*;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Arrays;
 
 public class Server {
 	private static int clientCount;
@@ -32,9 +33,12 @@ class Connection extends Thread {
 	DatabaseUtility dataObj = new DatabaseUtility();
 	LinkedList<Subject> subjResult;
 	LinkedList<Student> studResult;
+	LinkedList<Grade> grdResult;
 	SubjectList subjList;
 	StudentList studList;
+	GradeList grdList;
 	String request;
+	String orgRequest;
 	
 	public Connection (Socket aClientSocket, int tn, int client) {
 		
@@ -56,12 +60,16 @@ class Connection extends Thread {
 	public void run(){
 		
 		try {			                 
-			
-			System.out.println("Request : "+request);
-			
 	        dataObj.createDBtables();
 
 	        while ((request= inData.readUTF())!=null){
+	        	//System.out.println("Request : "+request);
+	        	if(request.startsWith("@")){
+	        		orgRequest = request;
+	        		System.out.printf("Found : %s\n",request.substring(1, request.indexOf("@", request.indexOf("@")+1)));
+	        		System.out.println("Request : "+request);
+	        		request = request.substring(1, request.indexOf("@", request.indexOf("@")+1));
+	        	}
 				switch(request){
 					case "view-assessment-request":
 						//System.out.println("Subject List called");
@@ -69,17 +77,30 @@ class Connection extends Thread {
 	        			subjList = new SubjectList(subjResult);
 				        outObj.writeObject(subjList);
 				        break;
-				    case "view-grade-request":
+				    case "student-list-request":
 				    	studResult = dataObj.fetchStudentList();
 						studList = new StudentList(studResult);
 				    	outObj.writeObject(studList);
 				    	break;
 
 				    case "set-grade-request":
-						studResult = dataObj.fetchStudentList();
+				    System.out.println(orgRequest.lastIndexOf("set-grade-request"));
+				    	String sub = orgRequest.substring(19,orgRequest.length());
+				    	String[] data = sub.split("&");
+				    	System.out.println(data[0]+ data[1] +data[2]+Integer.parseInt(data[3]));
+				    	dataObj.insertStudentGrade(data[0], data[1] ,data[2],Integer.parseInt(data[3]));
+						/*studResult = dataObj.fetchStudentList();
 						studList = new StudentList(studResult);
-				    	outObj.writeObject(studList);
+				    	outObj.writeObject(studList);*/
 				        break;
+
+				    case "grade-list-request":
+						grdResult = dataObj.fetchGradeList();
+						grdList = new GradeList(grdResult);
+				    	outObj.writeObject(grdList);
+				        break;
+
+				    default:
 				}
 			}
 
