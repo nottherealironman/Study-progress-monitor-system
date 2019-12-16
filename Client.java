@@ -45,10 +45,10 @@ public class Client {
       
       if (optSubj > 0 && optSubj <= 5) {
           if(option.equals("view grade")){
-            viewGrade(student,subjNames[optSubj],optSubj);
+            viewGrade(student,subjNames[optSubj]);
           }
           else if(option.equals("set grade")){
-            setGrade(student,subjNames[optSubj],optSubj);
+            setGrade(student,subjNames[optSubj]);
           }
       } 
       // System exit
@@ -67,16 +67,63 @@ public class Client {
     
   }
 
-  private static void viewGrade(String student, String subject, int optSubj){            
+  private static void viewGrade(String student, String subject){            
     /*switch(optSubj){
 
     }*/
     System.out.printf("view grade for %s in %s",student,subject);
   }
 
-  private static void setGrade(String student, String subject, int optSubj){
-                
-    System.out.printf("set grade for %s in %s",student,subject);
+  private static void setGrade(String student, String subject){
+    Scanner sc = new Scanner(System.in);
+    int optAsmnt;
+    do{
+      System.out.printf("Choose the assessment to set grade for %s in %s:\n\n",student,subject);
+      String[] asmntID = new String[4];
+      for (Student stud : students) {
+        //subjNames = new String[stud.getSubject().size()+1];
+        if(stud.getFullName().equals(student)){
+          
+          for (Subject subj : stud.getSubject()) {
+            if(subj.getName().equals(subject)){
+              int i = 1;
+              for(Assessment asmnt: subj.getAssessment()){
+                System.out.printf("%d. Assessment %s (%s)\n",i, asmnt.getAssessmentID(),asmnt.getType());
+                asmntID[i] = asmnt.getAssessmentID();
+                i++;
+              }
+              System.out.println();
+            }
+          }
+        }
+      }
+
+      System.out.println("\nSelect assessment or press 8 to go back or press 0 to exit:");
+      optAsmnt = sc.nextInt();
+      
+      if (optAsmnt > 0 && optAsmnt <= 3) {
+        try {
+            System.out.println(asmntID[optAsmnt]);
+        }
+        catch(ArrayIndexOutOfBoundsException exception) {
+            System.out.println("Sorry, invalid option!");
+        }
+          
+      } 
+      // System exit
+      else if (optAsmnt == 0) {
+          System.exit(0);
+      }
+      // Go back to previous menu if 8 is pressed
+      else if (optAsmnt == 8) {
+          break;
+      } 
+      else {
+          System.out.println("Sorry, invalid option!");
+      }
+    }while(optAsmnt!=0);
+    
+      
   }
   
   public static void main (String args[]) {
