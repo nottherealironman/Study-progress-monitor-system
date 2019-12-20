@@ -5,9 +5,6 @@ public class Grade implements Serializable
 	private String achievement;
 	private String knowledge;
 	private String skill;
-
-	public Grade() {
-	}
 	
 	public Grade(String achievement, String knowledge, String skill) {
 	     this.achievement = achievement;

@@ -78,7 +78,7 @@ public class Client {
     HashMap<String, String> grdRequest = new HashMap<String, String>();
     LinkedList<GradedAssessment> stdGrd;
     
-    System.out.printf("view grade for %s in %s",student.getFullName(),subject.getName());
+    System.out.printf("Assessment grade for %s in %s: \n\n",student.getFullName(),subject.getName());
     try {
       
       grdRequest.put("type","view-student-grade-request");
@@ -87,8 +87,22 @@ public class Client {
       outObj.writeObject(grdRequest);
 
       stdGrd = (LinkedList) inObj.readObject();
-      System.out.println(stdGrd);
-      //System.out.printf("Choose the grade from below list to set grade for %s in %s (%s):\n\n",student.getFullName(),subject.getName(),asmntID[optAsmnt]);
+
+      if(stdGrd.size() > 0){
+        for(Assessment assmnt: subject.getAssessment()){
+          String grade = "Not graded";
+          for(GradedAssessment grdAssmnt: stdGrd){
+            if(assmnt.getAssessmentID().equals(grdAssmnt.getAssessmentID())){
+              grade = grdAssmnt.getGrade().getAchievement();
+            }
+          }
+          System.out.printf("Assessment %s (%s): %s\n",assmnt.getAssessmentID(), assmnt.getType(), grade);
+        }
+      }
+      else{
+        System.out.printf("Sorry, grades for %s is not yet graded.\n", subject.getName());
+      }
+      System.out.println();
     }
     catch (IOException e){
       System.out.println("readline:"+e.getMessage());
@@ -329,7 +343,6 @@ public class Client {
                         }
                         System.out.println("\nSelect student or press 8 to go back or press 0 to exit:");
                         optStud = sc.nextInt();
-                        System.out.println(listOfstud.size());
                         
                         if(optStud >0 && optStud <=5){
                           displaySubject(listOfstud.get(optStud-1),"view grade", outObj, inObj);
