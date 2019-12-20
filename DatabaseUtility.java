@@ -413,51 +413,28 @@ public class DatabaseUtility {
         return result;
     }
 
-    public int fetchStdIdByName(String name){
-        PreparedStatement studentQuery;
-        ResultSet rs;
-        int studentID;
-        try{
-            if  (dbConnection  == null)//connect to MySql ;
-                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);  
-            studentQuery   = dbConnection.prepareStatement( "SELECT * FROM student WHERE FullName = ?"); 
-                studentQuery.setString(1, name);
-                rs = studentQuery.executeQuery();
-                
-                while (rs.next()) {
-                    System.out.println(rs.getString("StudentID"));
-                    studentID = Integer.parseInt(rs.getString("StudentID"));
-                    return studentID;
-                    //addRecord.setInt(1, studentID);
-                }
-        }
-        catch(SQLException e) {
-                 System.out.println("Connection Failed! Check output console");
-                                    System.out.println("SQLException: " + e.getMessage());
-                                    System.out.println("SQLState: " + e.getSQLState());
-                 e.printStackTrace();
-        }
-        
-        return 0;
-    }
-
-    public int fetchSubIdByName(String name){
-        PreparedStatement subjectQuery;
+     public boolean checkAssignmentGraded(int studentId, int subjectId, String assessmentId){
+        PreparedStatement grdQuery;
         ResultSet rs;
         int subjectID;
         try{
             if  (dbConnection  == null)//connect to MySql ;
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);
-                subjectQuery   = dbConnection.prepareStatement( "SELECT * FROM subject WHERE Name = ?"); 
-                subjectQuery.setString(1, name);
-                rs = subjectQuery.executeQuery();
+                grdQuery   = dbConnection.prepareStatement( "SELECT * FROM studentgrade WHERE StudentID = ? AND SubjectID = ? AND AssessmentID = ?"); 
+                grdQuery.setInt(1, studentId);
+                grdQuery.setInt(2, subjectId);
+                grdQuery.setString(3, assessmentId);
+                rs = grdQuery.executeQuery();
                 
-                while (rs.next()) {
+                if(rs.isBeforeFirst()){
+                  return true;
+                }
+                /*while (rs.next()) {
                     System.out.println(rs.getString("SubjectID"));
                     subjectID = Integer.parseInt(rs.getString("SubjectID"));
                     return subjectID;
                     //addRecord.setInt(1, studentID);
-                }
+                }*/
         }
         catch(SQLException e) {
                  System.out.println("Connection Failed! Check output console");
@@ -465,56 +442,46 @@ public class DatabaseUtility {
                                     System.out.println("SQLState: " + e.getSQLState());
                  e.printStackTrace();
         }
-        return 0;
+        return false;
     }
 
     public boolean insertStudentGrade(int studentId, int subjectId, String assessmentId, int gradeId){
        
        PreparedStatement addRecord;
-       PreparedStatement studentQuery;
-       PreparedStatement subjectQuery;
+       PreparedStatement updateRecord;
        ResultSet rs;
-       //int studentID;
-       //int subjectID;
+       boolean recordExist;
         try {
            if (dbConnection  == null)// connect to MySql 
-              dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD); 
-             //String[][] result = this.readDataFile();
-             addRecord   = dbConnection.prepareStatement( "REPLACE INTO studentgrade " +
+                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD); 
+                recordExist = checkAssignmentGraded(studentId, subjectId, assessmentId);
+                System.out.println("Record exists: "+recordExist);
+                if(recordExist){
+                  updateRecord   = dbConnection.prepareStatement( "UPDATE studentgrade " +
+                        " SET GradeID = ? "+
+                        " WHERE StudentID = ? AND SubjectID = ? AND AssessmentID = ? "); 
+                  updateRecord.setInt(1, gradeId); 
+                  updateRecord.setInt(2, studentId);
+                  updateRecord.setInt(3, subjectId);
+                  updateRecord.setString(4, assessmentId);
+                  updateRecord.executeUpdate(); 
+                }
+                else{
+                  addRecord   = dbConnection.prepareStatement( "REPLACE INTO studentgrade " +
                         "(StudentID, SubjectID, AssessmentID, GradeID)" +
                                    "VALUES (?,?,?,?)");  
-                /*studentQuery   = dbConnection.prepareStatement( "SELECT * FROM student WHERE FullName = ?"); 
-                studentQuery.setString(1, student);
-                rs = studentQuery.executeQuery();
-                
-                while (rs.next()) {
-                    System.out.println(rs.getString("StudentID"));
-                    int studentID = Integer.parseInt(rs.getString("StudentID"));
-                    addRecord.setInt(1, studentID);
-                }*/
-                //studentID = fetchStdIdByName(student);
-                addRecord.setInt(1, studentId);
-                //subjectID = fetchSubIdByName(subject);
-                addRecord.setInt(2, subjectId);
-                /*subjectQuery   = dbConnection.prepareStatement( "SELECT * FROM subject WHERE Name = ?"); 
-                subjectQuery.setString(1, subject);
-                rs = subjectQuery.executeQuery();
-                
-                while (rs.next()) {
-                    System.out.println(rs.getString("SubjectID"));
-                    int subjectID = Integer.parseInt(rs.getString("SubjectID"));
-                    addRecord.setInt(2, subjectID);
-                }*/
-                
-                addRecord.setString(3, assessmentId);
-                addRecord.setInt(4, gradeId);
-                addRecord.executeUpdate(); 
+                  addRecord.setInt(1, studentId);
+                  addRecord.setInt(2, subjectId);
+                  addRecord.setString(3, assessmentId);
+                  addRecord.setInt(4, gradeId);
+                  addRecord.executeUpdate(); 
+                }
              
         } 
         catch(SQLException e) {
                  System.out.println("Connection Failed! Check output console");
-                                    System.out.println("SQLException: " + e.getMessage());
-                                    System.out.println("SQLState: " + e.getSQLState());
+                 System.out.println("SQLException: " + e.getMessage());
+                 System.out.println("SQLState: " + e.getSQLState());
                  e.printStackTrace();
                  return false;
         }
@@ -534,9 +501,6 @@ public class DatabaseUtility {
         try {
             if  (dbConnection  == null)//connect to MySql ;
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
-            // get the list of Student
-            //studentID = fetchStdIdByName(student);
-            //subjectID = fetchSubIdByName(subject);
                 
             stdGradeQuery   = dbConnection.prepareStatement( "SELECT s.Name, a.*, sg.GradeID, g.* FROM studentgrade as sg "+
                 " INNER JOIN subject AS s ON sg.SubjectID = s.SubjectID "+
@@ -550,19 +514,6 @@ public class DatabaseUtility {
             while (rs.next()) {
                 Grade grade = new Grade(rs.getString("Achievement"),rs.getString("Knowledge"), rs.getString("Skill"));
                 grdAssmnt.add(new GradedAssessment(rs.getString("AssessmentID"), rs.getString("Type"), rs.getString("Topic"), rs.getString("Format"), rs.getString("DueDate"), grade));
-                
-                 //System.out.println(grdAssmnt);
-                 /*Subject subject = new Subject(rs.getString("SubjectID"), rs.getString("Name"), grdAssmnt);
-                student = new Student();
-                //assessmentId = rs.getString("AssessmentID");
-                System.out.println("AssessmentID: "+rs.getString("AssessmentID"));
-                System.out.println("Type: "+rs.getString("Type"));
-                System.out.println("Grade: "+rs.getString("Type"));*/
-                /*type = rs.getString("Type");
-                topic = rs.getString("Topic");
-                format = rs.getString("Format");
-                dueDate = rs.getString("DueDate");*/
-                //result.add(grade);
             }
             
         }catch(SQLException e) {
@@ -571,8 +522,6 @@ public class DatabaseUtility {
             System.out.println("SQLState: " + e.getSQLState());
         e.printStackTrace();
        }
-       /*grdAssmnt = new GradedAssessment(assessmentID,type,topic ,format, dueDate,grade);
-       return grdAssmnt;*/
        return grdAssmnt;
     }
 
