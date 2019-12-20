@@ -376,7 +376,7 @@ public class DatabaseUtility {
             while (rs.next()) {
                 //result.add(rs.getString("Name"));
                 subjects = fetchSubjectList();
-                stud = new Student(rs.getString("FullName"),rs.getInt("YearLevel"), subjects);
+                stud = new Student(rs.getInt("StudentID"),rs.getString("FullName"),rs.getInt("YearLevel"), subjects);
                 result.add(stud);
             }
         }catch(SQLException e) {
@@ -413,20 +413,77 @@ public class DatabaseUtility {
         return result;
     }
 
-    public boolean insertStudentGrade(String student, String subject, String assessmentId, int grade){
+    public int fetchStdIdByName(String name){
+        PreparedStatement studentQuery;
+        ResultSet rs;
+        int studentID;
+        try{
+            if  (dbConnection  == null)//connect to MySql ;
+                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);  
+            studentQuery   = dbConnection.prepareStatement( "SELECT * FROM student WHERE FullName = ?"); 
+                studentQuery.setString(1, name);
+                rs = studentQuery.executeQuery();
+                
+                while (rs.next()) {
+                    System.out.println(rs.getString("StudentID"));
+                    studentID = Integer.parseInt(rs.getString("StudentID"));
+                    return studentID;
+                    //addRecord.setInt(1, studentID);
+                }
+        }
+        catch(SQLException e) {
+                 System.out.println("Connection Failed! Check output console");
+                                    System.out.println("SQLException: " + e.getMessage());
+                                    System.out.println("SQLState: " + e.getSQLState());
+                 e.printStackTrace();
+        }
+        
+        return 0;
+    }
+
+    public int fetchSubIdByName(String name){
+        PreparedStatement subjectQuery;
+        ResultSet rs;
+        int subjectID;
+        try{
+            if  (dbConnection  == null)//connect to MySql ;
+                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);
+                subjectQuery   = dbConnection.prepareStatement( "SELECT * FROM subject WHERE Name = ?"); 
+                subjectQuery.setString(1, name);
+                rs = subjectQuery.executeQuery();
+                
+                while (rs.next()) {
+                    System.out.println(rs.getString("SubjectID"));
+                    subjectID = Integer.parseInt(rs.getString("SubjectID"));
+                    return subjectID;
+                    //addRecord.setInt(1, studentID);
+                }
+        }
+        catch(SQLException e) {
+                 System.out.println("Connection Failed! Check output console");
+                                    System.out.println("SQLException: " + e.getMessage());
+                                    System.out.println("SQLState: " + e.getSQLState());
+                 e.printStackTrace();
+        }
+        return 0;
+    }
+
+    public boolean insertStudentGrade(int studentID, String subject, String assessmentId, int grade){
        
        PreparedStatement addRecord;
        PreparedStatement studentQuery;
        PreparedStatement subjectQuery;
        ResultSet rs;
+       //int studentID;
+       int subjectID;
         try {
            if (dbConnection  == null)// connect to MySql 
               dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD); 
              //String[][] result = this.readDataFile();
-             addRecord   = dbConnection.prepareStatement( "INSERT INTO studentgrade " +
+             addRecord   = dbConnection.prepareStatement( "REPLACE INTO studentgrade " +
                         "(StudentID, SubjectID, AssessmentID, GradeID)" +
                                    "VALUES (?,?,?,?)");  
-                studentQuery   = dbConnection.prepareStatement( "SELECT * FROM student WHERE FullName = ?"); 
+                /*studentQuery   = dbConnection.prepareStatement( "SELECT * FROM student WHERE FullName = ?"); 
                 studentQuery.setString(1, student);
                 rs = studentQuery.executeQuery();
                 
@@ -434,9 +491,12 @@ public class DatabaseUtility {
                     System.out.println(rs.getString("StudentID"));
                     int studentID = Integer.parseInt(rs.getString("StudentID"));
                     addRecord.setInt(1, studentID);
-                }
-
-                subjectQuery   = dbConnection.prepareStatement( "SELECT * FROM subject WHERE Name = ?"); 
+                }*/
+                //studentID = fetchStdIdByName(student);
+                addRecord.setInt(1, studentID);
+                subjectID = fetchSubIdByName(subject);
+                addRecord.setInt(2, subjectID);
+                /*subjectQuery   = dbConnection.prepareStatement( "SELECT * FROM subject WHERE Name = ?"); 
                 subjectQuery.setString(1, subject);
                 rs = subjectQuery.executeQuery();
                 
@@ -444,7 +504,7 @@ public class DatabaseUtility {
                     System.out.println(rs.getString("SubjectID"));
                     int subjectID = Integer.parseInt(rs.getString("SubjectID"));
                     addRecord.setInt(2, subjectID);
-                }
+                }*/
                 
                 addRecord.setString(3, assessmentId);
                 addRecord.setInt(4, grade);
@@ -459,5 +519,111 @@ public class DatabaseUtility {
                  return false;
         }
         return true;
+    }
+
+    public GradedAssessment fetchAssessmentGrade(int studentID, String subject, String assessmentId){
+        PreparedStatement stdGradeQuery; 
+        //LinkedList<Grade> result = new LinkedList<>();
+        //LinkedList<Subject> subjects;
+        GradedAssessment grdAssmnt;
+        Grade grade = new Grade();
+        ResultSet rs;
+        //int studentID;
+        int subjectID;
+        String assessmentID = "";
+            String type= "";
+            String topic= "";
+            String format= "";
+            String dueDate= "";
+        try {
+            if  (dbConnection  == null)//connect to MySql ;
+                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
+            // get the list of Student
+            //studentID = fetchStdIdByName(student);
+            subjectID = fetchSubIdByName(subject);
+                
+            stdGradeQuery   = dbConnection.prepareStatement( "SELECT a.*, sg.GradeID, sg.AssessmentID, g.* FROM studentgrade as sg "+
+                "INNER JOIN assessment as a ON sg.AssessmentID = a.AssessmentID "+
+                "INNER JOIN grade as g ON g.GradeId = sg.GradeId "+
+                "WHERE sg.StudentID = ? AND sg.SubjectID = ? AND sg.AssessmentID = ?"); 
+            stdGradeQuery.setInt(1, studentID);
+            stdGradeQuery.setInt(2, subjectID);
+            stdGradeQuery.setString(3, assessmentId);
+            rs = stdGradeQuery.executeQuery();
+            
+            
+            while (rs.next()) {
+                grade = new Grade(rs.getString("Achievement"),rs.getString("Knowledge"), rs.getString("Skill"));
+                assessmentId = rs.getString("AssessmentID");
+                System.out.println("AssessmentID: "+rs.getString("AssessmentID"));
+                System.out.println("Type: "+rs.getString("Type"));
+                type = rs.getString("Type");
+                topic = rs.getString("Topic");
+                format = rs.getString("Format");
+                dueDate = rs.getString("DueDate");
+                //result.add(grade);
+            }
+            
+        }catch(SQLException e) {
+            System.out.println("Connection Failed! Check output console");
+            System.out.println("SQLException: " + e.getMessage());
+            System.out.println("SQLState: " + e.getSQLState());
+        e.printStackTrace();
+       }
+       grdAssmnt = new GradedAssessment(assessmentID,type,topic ,format, dueDate,grade);
+       return grdAssmnt;
+    }
+
+    public GradedAssessment fetchStudentGrade(String student, String subject, String assessmentId){
+        PreparedStatement stdGradeQuery; 
+        //LinkedList<Grade> result = new LinkedList<>();
+        //LinkedList<Subject> subjects;
+        GradedAssessment grdAssmnt;
+        Grade grade = new Grade();
+        ResultSet rs;
+        int studentID;
+        int subjectID;
+        String assessmentID = "";
+            String type= "";
+            String topic= "";
+            String format= "";
+            String dueDate= "";
+        try {
+            if  (dbConnection  == null)//connect to MySql ;
+                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
+            // get the list of Student
+            studentID = fetchStdIdByName(student);
+            subjectID = fetchSubIdByName(subject);
+                
+            stdGradeQuery   = dbConnection.prepareStatement( "SELECT a.*, sg.GradeID, sg.AssessmentID, g.* FROM studentgrade as sg "+
+                "INNER JOIN assessment as a ON sg.AssessmentID = a.AssessmentID "+
+                "INNER JOIN grade as g ON g.GradeId = sg.GradeId "+
+                "WHERE sg.StudentID = ? AND sg.SubjectID = ? AND sg.AssessmentID = ?"); 
+            stdGradeQuery.setInt(1, studentID);
+            stdGradeQuery.setInt(2, subjectID);
+            stdGradeQuery.setString(3, assessmentId);
+            rs = stdGradeQuery.executeQuery();
+            
+            
+            while (rs.next()) {
+                grade = new Grade(rs.getString("Achievement"),rs.getString("Knowledge"), rs.getString("Skill"));
+                assessmentId = rs.getString("AssessmentID");
+                System.out.println("AssessmentID: "+rs.getString("AssessmentID"));
+                System.out.println("Type: "+rs.getString("Type"));
+                type = rs.getString("Type");
+                topic = rs.getString("Topic");
+                format = rs.getString("Format");
+                dueDate = rs.getString("DueDate");
+                //result.add(grade);
+            }
+            
+        }catch(SQLException e) {
+            System.out.println("Connection Failed! Check output console");
+            System.out.println("SQLException: " + e.getMessage());
+            System.out.println("SQLState: " + e.getSQLState());
+        e.printStackTrace();
+       }
+       grdAssmnt = new GradedAssessment(assessmentID,type,topic ,format, dueDate,grade);
+       return grdAssmnt;
     }
 }

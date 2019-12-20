@@ -16,6 +16,12 @@ public class GradedAssessment extends Assessment implements Serializable
 	public void setGrade(Grade grd){
         this.grd = grd;
     }
+
+    @Override
+    public String toString(){
+        return String.format(" %s\n %s\n", 
+                super.toString(),this.grd);
+    }
    
   }
 

@@ -3,18 +3,21 @@ import java.io.*;
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.HashMap;
 
 public class Client {
   private static SubjectList subjList;
   private static StudentList studList;
   private static GradeList grdList;
+  private static GradedAssessment grdAssmnt;
   private static LinkedList<Subject> subjects;
   private static LinkedList<Student> students;
   private static LinkedList<Grade> grades;
 
   private static void displayAssessment(String subject){
     System.out.printf("Assignment of %s:\n\n",subject);
-   
+    
     for (Subject subj : subjects) {
       if(subj.getName().equals(subject)){
         for (Assessment assessment : subj.getAssessment()) {
@@ -24,15 +27,15 @@ public class Client {
     }
   }
 
-  private static void displaySubject(String student, String option, DataOutputStream outData, ObjectInputStream inObj){
+  private static void displaySubject(Student student, String option, ObjectOutputStream outObj, ObjectInputStream inObj){
     Scanner sc = new Scanner(System.in);
     int optSubj;
     do{
-      System.out.printf("Choose the subject from list below to %s of %s:\n\n",option, student);
+      System.out.printf("Choose the subject from list below to %s of %s:\n\n",option, student.getFullName());
       String[] subjNames = new String[6];
       for (Student stud : students) {
         //subjNames = new String[stud.getSubject().size()+1];
-        if(stud.getFullName().equals(student)){
+        if(stud.getStudentID()== student.getStudentID()){
           int i = 1;
           for (Subject subject : stud.getSubject()) {
               System.out.println(i+". "+subject.getName());
@@ -47,10 +50,10 @@ public class Client {
       
       if (optSubj > 0 && optSubj <= 5) {
           if(option.equals("view grade")){
-            viewGrade(student,subjNames[optSubj], outData, inObj);
+            viewGrade(student,subjNames[optSubj], outObj, inObj);
           }
           else if(option.equals("set grade")){
-            setGrade(student,subjNames[optSubj], outData, inObj);
+            setGrade(student,subjNames[optSubj], outObj, inObj);
           }
       } 
       // System exit
@@ -69,23 +72,23 @@ public class Client {
     
   }
 
-  private static void viewGrade(String student, String subject, DataOutputStream outData, ObjectInputStream inObj){            
+  private static void viewGrade(Student student, String subject, ObjectOutputStream outObj, ObjectInputStream inObj){            
     /*switch(optSubj){
 
     }*/
-    System.out.printf("view grade for %s in %s",student,subject);
+    System.out.printf("view grade for %s in %s",student.getFullName(),subject);
   }
 
-  private static void setGrade(String student, String subject, DataOutputStream outData, ObjectInputStream inObj){
+  private static void setGrade(Student student, String subject, ObjectOutputStream outObj, ObjectInputStream inObj){
     Scanner sc = new Scanner(System.in);
     int optAsmnt;
     int optGrd;
     do{
-      System.out.printf("Choose the assessment to set grade for %s in %s:\n\n",student,subject);
+      System.out.printf("Choose the assessment to set grade for %s in %s:\n\n",student.getFullName(),subject);
       String[] asmntID = new String[4];
       for (Student stud : students) {
         //subjNames = new String[stud.getSubject().size()+1];
-        if(stud.getFullName().equals(student)){
+        if(stud.getStudentID() == student.getStudentID()){
           
           for (Subject subj : stud.getSubject()) {
             if(subj.getName().equals(subject)){
@@ -109,32 +112,57 @@ public class Client {
             while(true){
               //String[] grdID = new String[6];
               //asmntID[optAsmnt]
-              System.out.printf("Choose the grade from below list to set grade for %s in %s (%s):\n\n",student,subject,asmntID[optAsmnt]);
-              outData.writeUTF("grade-list-request");
+              HashMap<String, String> grdRequest = new HashMap<String, String>();
+              System.out.printf("Choose the grade from below list to set grade for %s in %s (%s):\n\n",student.getFullName(),subject,asmntID[optAsmnt]);
+              grdRequest.put("type","grade-list-request");
+              outObj.writeObject(grdRequest);
+              //outData.writeUTF("grade-list-request");
+              
               grdList = (GradeList) inObj.readObject();
               grades = grdList.getGrade();
+              String[] gradesVals = new String[grades.size()+1];
               int i = 1;
               for(Grade grd: grades){
                 System.out.println(i+". "+grd.getAchievement());
+                gradesVals[i] = grd.getAchievement();
                 i++;
               }
               System.out.println("\nSelect grade or press 8 to go back or press 0 to exit:");
               optGrd = sc.nextInt();
 
               if (optGrd > 0 && optGrd <= 5) {
-                outData.writeUTF("@set-grade-request@"+student+"&"+subject+"&"+asmntID[optAsmnt]+"&"+optGrd);
+                // Sending set grade request to server
+                HashMap<String, String> setGrdrequest = new HashMap<String, String>();
+                HashMap<String, String> response;
+                setGrdrequest.put("type","set-grade-request");
+                setGrdrequest.put("studentID",Integer.toString(student.getStudentID()));
+                setGrdrequest.put("subject",subject);
+                setGrdrequest.put("assessmentID",asmntID[optAsmnt]);
+                setGrdrequest.put("gradeID",Integer.toString(optGrd));
+                outObj.writeObject(setGrdrequest);
+                
+
+                response = (HashMap) inObj.readObject();
+                if(response.get("status").equals("success")){
+                  System.out.printf("Grade \"%s\" successfully set for %s in %s (%s) \n\n",gradesVals[optGrd], student.getFullName(), subject, asmntID[optAsmnt]);
+                }
+                optGrd = 8;
+                /*outData.writeUTF("@set-grade-request@"+student.getStudentID()+"&"+subject+"&"+asmntID[optAsmnt]+"&"+optGrd);
+                grdAssmnt = (GradedAssessment) inObj.readObject();
+                System.out.println("ID: "+grdAssmnt.getAssessmentID());*/
               }
               // System exit
               else if (optGrd == 0) {
                   System.exit(0);
               }
-              // Go back to previous menu if 8 is pressed
-              else if (optGrd == 8) {
-                  break;
-              } 
               else {
                   System.out.println("Sorry, invalid option!");
               }
+
+              // Go back to previous menu if 8 is pressed
+              if (optGrd == 8) {
+                  break;
+              } 
             }
             
         }
@@ -202,6 +230,7 @@ public class Client {
         int optInput;
         int optSubj;
         int optStud;
+        
 
         switch(userType){
             // Administrator 
@@ -220,8 +249,11 @@ public class Client {
                   // View assessment
                   case 1:
                       do{
+                        HashMap<String, String> request = new HashMap<String, String>();
                         System.out.println(viewAsses);
-                        outData.writeUTF("view-assessment-request");
+                        //outData.writeUTF("view-assessment-request");
+                        request.put("type","view-assessment-request");
+                        outObj.writeObject(request);
                         subjList = (SubjectList) inObj.readObject();  
                         //getClass().getName()
                         //System.out.println("subjList : " + subjList.getSubject());
@@ -234,30 +266,20 @@ public class Client {
                             i++;
                         }
                         System.out.println("\nSelect subject or press 8 to go back or press 0 to exit:");
-                        optSubj = sc.nextInt();
+                        optSubj = sc.nextInt();                        
 
-                        switch(optSubj){
-                          case 1:
-                              displayAssessment(subjNames[optSubj]);
-                              break;
-                          case 2:
-                              displayAssessment(subjNames[optSubj]);
-                              break;
-                          case 3:
-                              displayAssessment(subjNames[optSubj]);
-                              break;
-                          case 4:
-                              displayAssessment(subjNames[optSubj]);
-                              break;
-                          case 5:
-                              displayAssessment(subjNames[optSubj]);
-                              break;
-                          case 0:
-                              System.exit(0);
+                        if(optSubj >0 && optSubj <=5){
+                          displayAssessment(subjNames[optSubj]);
+                        }
+                        else if(optSubj == 0){
+                          System.exit(0);
                         }
                         // Go back to previous menu if 8 is pressed
-                        if(optSubj == 8){
+                        else if(optSubj == 8){
                           break;
+                        }
+                        else{
+                          System.out.println("Sorry, invalid option!");
                         }
 
                       }while(optSubj != 0);
@@ -266,47 +288,30 @@ public class Client {
                   case 2:
                     // View grades
                       do{
+                        HashMap<String, String> request = new HashMap<String, String>();
                         System.out.println(viewGrd);
-                        outData.writeUTF("student-list-request");
+                        request.put("type","student-list-request");
+                        outObj.writeObject(request);
                         studList = (StudentList) inObj.readObject();  
                         //System.out.println("====================================");
                         //System.out.println("studList : " + studList);
 
                         students = studList.getStudent();
-                        String[] studNames = new String[students.size()+1];
+                        /*List<Student> stud = new int[students.size()+1];*/
+                        List<Student> listOfstud = new LinkedList<>();
                         int i = 1;
                         for (Student stud : students) {
                             System.out.println(i+". "+stud.getFullName());
-                            studNames[i] = stud.getFullName();
+                            //studIds[i] = stud.getStudentID();
+                            listOfstud.add(stud);
                             i++;
                         }
                         System.out.println("\nSelect student or press 8 to go back or press 0 to exit:");
                         optStud = sc.nextInt();
-
+                        System.out.println(listOfstud.size());
                         
-
-                        /*switch(optStud){
-                          case 1:
-                              displaySubject(studNames[optStud]);
-                              break;
-
-                          case 2:
-                              displaySubject(studNames[optStud]);
-                              break;
-                          case 3:
-                              displaySubject(studNames[optStud]);
-                              break;
-                          case 4:
-                              displaySubject(studNames[optStud]);
-                              break;
-                          case 5:
-                              displaySubject(studNames[optStud]);
-                              break;
-                          case 0:
-                              System.exit(0);
-                        }*/
                         if(optStud >0 && optStud <=5){
-                          displaySubject(studNames[optStud],"view grade", outData, inObj);
+                          displaySubject(listOfstud.get(optStud-1),"view grade", outObj, inObj);
                         }
                         else if(optStud == 0){
                           System.exit(0);
@@ -325,46 +330,29 @@ public class Client {
                   case 3:
                       //Set grades
                       do{
+                        HashMap<String, String> request = new HashMap<String, String>();
                         System.out.println(setGrd);
-                        outData.writeUTF("student-list-request");
+                        request.put("type","student-list-request");
+                        outObj.writeObject(request);
                         studList = (StudentList) inObj.readObject();  
                         //System.out.println("====================================");
                         //System.out.println("studList : " + studList);
 
                         students = studList.getStudent();
-                        String[] studNames = new String[students.size()+1];
+                        /*int[] studIds = new int[students.size()+1];*/
+                        List<Student> listOfstud = new LinkedList<>();
                         int i = 1;
                         for (Student stud : students) {
                             System.out.println(i+". "+stud.getFullName());
-                            studNames[i] = stud.getFullName();
+                            /*studIds[i] = stud.getStudentID();*/
+                            listOfstud.add(stud);
                             i++;
                         }
                         System.out.println("\nSelect student or press 8 to go back or press 0 to exit:");
                         optStud = sc.nextInt();
-                        
-                        /*switch(optStud){
-                          case 1:
-                              displaySubject(studNames[optStud]);
-                              break;
-
-                          case 2:
-                              displaySubject(studNames[optStud]);
-                              break;
-                          case 3:
-                              displaySubject(studNames[optStud]);
-                              break;
-                          case 4:
-                              displaySubject(studNames[optStud]);
-                              break;
-                          case 5:
-                              displaySubject(studNames[optStud]);
-                              break;
-                          case 0:
-                              System.exit(0);
-                        }*/
 
                         if(optStud >0 && optStud <=5){
-                          displaySubject(studNames[optStud],"set grade",outData, inObj);
+                          displaySubject(listOfstud.get(optStud-1),"set grade",outObj, inObj);
                         }
                         else if(optStud == 0){
                           System.exit(0);
