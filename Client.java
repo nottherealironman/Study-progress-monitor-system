@@ -32,14 +32,16 @@ public class Client {
     int optSubj;
     do{
       System.out.printf("Choose the subject from list below to %s of %s:\n\n",option, student.getFullName());
-      String[] subjNames = new String[6];
+      //String[] subjNames = new String[6];
+      List<Subject> listOfsubj = new LinkedList<>();
       for (Student stud : students) {
         //subjNames = new String[stud.getSubject().size()+1];
         if(stud.getStudentID()== student.getStudentID()){
           int i = 1;
           for (Subject subject : stud.getSubject()) {
               System.out.println(i+". "+subject.getName());
-              subjNames[i] = subject.getName();
+              //subjNames[i] = subject.getName();
+              listOfsubj.add(subject);
               i++;
           }
         }
@@ -50,10 +52,10 @@ public class Client {
       
       if (optSubj > 0 && optSubj <= 5) {
           if(option.equals("view grade")){
-            viewGrade(student,subjNames[optSubj], outObj, inObj);
+            viewGrade(student,listOfsubj.get(optSubj-1), outObj, inObj);
           }
           else if(option.equals("set grade")){
-            setGrade(student,subjNames[optSubj], outObj, inObj);
+            setGrade(student,listOfsubj.get(optSubj-1), outObj, inObj);
           }
       } 
       // System exit
@@ -72,26 +74,45 @@ public class Client {
     
   }
 
-  private static void viewGrade(Student student, String subject, ObjectOutputStream outObj, ObjectInputStream inObj){            
-    /*switch(optSubj){
+  private static void viewGrade(Student student, Subject subject, ObjectOutputStream outObj, ObjectInputStream inObj){            
+    HashMap<String, String> grdRequest = new HashMap<String, String>();
+    LinkedList<GradedAssessment> stdGrd;
+    
+    System.out.printf("view grade for %s in %s",student.getFullName(),subject.getName());
+    try {
+      
+      grdRequest.put("type","view-student-grade-request");
+      grdRequest.put("studentID",Integer.toString(student.getStudentID()));
+      grdRequest.put("subjectID",Integer.toString(subject.getId()));
+      outObj.writeObject(grdRequest);
 
-    }*/
-    System.out.printf("view grade for %s in %s",student.getFullName(),subject);
+      stdGrd = (LinkedList) inObj.readObject();
+      System.out.println(stdGrd);
+      //System.out.printf("Choose the grade from below list to set grade for %s in %s (%s):\n\n",student.getFullName(),subject.getName(),asmntID[optAsmnt]);
+    }
+    catch (IOException e){
+      System.out.println("readline:"+e.getMessage());
+    }
+    catch(ClassNotFoundException ex){
+      ex.printStackTrace();
+    }
+    
+    
   }
 
-  private static void setGrade(Student student, String subject, ObjectOutputStream outObj, ObjectInputStream inObj){
+  private static void setGrade(Student student, Subject subject, ObjectOutputStream outObj, ObjectInputStream inObj){
     Scanner sc = new Scanner(System.in);
     int optAsmnt;
     int optGrd;
     do{
-      System.out.printf("Choose the assessment to set grade for %s in %s:\n\n",student.getFullName(),subject);
+      System.out.printf("Choose the assessment to set grade for %s in %s:\n\n",student.getFullName(),subject.getName());
       String[] asmntID = new String[4];
       for (Student stud : students) {
         //subjNames = new String[stud.getSubject().size()+1];
         if(stud.getStudentID() == student.getStudentID()){
           
           for (Subject subj : stud.getSubject()) {
-            if(subj.getName().equals(subject)){
+            if(subj.getName().equals(subject.getName())){
               int i = 1;
               for(Assessment asmnt: subj.getAssessment()){
                 System.out.printf("%d. Assessment %s (%s)\n",i, asmnt.getAssessmentID(),asmnt.getType());
@@ -113,9 +134,9 @@ public class Client {
               //String[] grdID = new String[6];
               //asmntID[optAsmnt]
               HashMap<String, String> grdRequest = new HashMap<String, String>();
-              System.out.printf("Choose the grade from below list to set grade for %s in %s (%s):\n\n",student.getFullName(),subject,asmntID[optAsmnt]);
               grdRequest.put("type","grade-list-request");
               outObj.writeObject(grdRequest);
+              System.out.printf("Choose the grade from below list to set grade for %s in %s (%s):\n\n",student.getFullName(),subject.getName(),asmntID[optAsmnt]);
               //outData.writeUTF("grade-list-request");
               
               grdList = (GradeList) inObj.readObject();
@@ -136,7 +157,7 @@ public class Client {
                 HashMap<String, String> response;
                 setGrdrequest.put("type","set-grade-request");
                 setGrdrequest.put("studentID",Integer.toString(student.getStudentID()));
-                setGrdrequest.put("subject",subject);
+                setGrdrequest.put("subjectID",Integer.toString(subject.getId()));
                 setGrdrequest.put("assessmentID",asmntID[optAsmnt]);
                 setGrdrequest.put("gradeID",Integer.toString(optGrd));
                 outObj.writeObject(setGrdrequest);
@@ -144,7 +165,7 @@ public class Client {
 
                 response = (HashMap) inObj.readObject();
                 if(response.get("status").equals("success")){
-                  System.out.printf("Grade \"%s\" successfully set for %s in %s (%s) \n\n",gradesVals[optGrd], student.getFullName(), subject, asmntID[optAsmnt]);
+                  System.out.printf("Grade \"%s\" successfully set for %s in %s (%s) \n\n",gradesVals[optGrd], student.getFullName(), subject.getName(), asmntID[optAsmnt]);
                 }
                 optGrd = 8;
                 /*outData.writeUTF("@set-grade-request@"+student.getStudentID()+"&"+subject+"&"+asmntID[optAsmnt]+"&"+optGrd);

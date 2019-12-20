@@ -349,7 +349,7 @@ public class DatabaseUtility {
             while (rs.next()) {
                 //result.add(rs.getString("Name"));
                 assessment = fetchAssessmentList(rs.getInt("SubjectID"));
-                subj = new Subject(rs.getString("Name"), assessment);
+                subj = new Subject(rs.getInt("SubjectID"), rs.getString("Name"), assessment);
                 result.add(subj);
             }
         }catch(SQLException e) {
@@ -468,14 +468,14 @@ public class DatabaseUtility {
         return 0;
     }
 
-    public boolean insertStudentGrade(int studentID, String subject, String assessmentId, int grade){
+    public boolean insertStudentGrade(int studentId, int subjectId, String assessmentId, int gradeId){
        
        PreparedStatement addRecord;
        PreparedStatement studentQuery;
        PreparedStatement subjectQuery;
        ResultSet rs;
        //int studentID;
-       int subjectID;
+       //int subjectID;
         try {
            if (dbConnection  == null)// connect to MySql 
               dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD); 
@@ -493,9 +493,9 @@ public class DatabaseUtility {
                     addRecord.setInt(1, studentID);
                 }*/
                 //studentID = fetchStdIdByName(student);
-                addRecord.setInt(1, studentID);
-                subjectID = fetchSubIdByName(subject);
-                addRecord.setInt(2, subjectID);
+                addRecord.setInt(1, studentId);
+                //subjectID = fetchSubIdByName(subject);
+                addRecord.setInt(2, subjectId);
                 /*subjectQuery   = dbConnection.prepareStatement( "SELECT * FROM subject WHERE Name = ?"); 
                 subjectQuery.setString(1, subject);
                 rs = subjectQuery.executeQuery();
@@ -507,7 +507,7 @@ public class DatabaseUtility {
                 }*/
                 
                 addRecord.setString(3, assessmentId);
-                addRecord.setInt(4, grade);
+                addRecord.setInt(4, gradeId);
                 addRecord.executeUpdate(); 
              
         } 
@@ -521,15 +521,11 @@ public class DatabaseUtility {
         return true;
     }
 
-    public GradedAssessment fetchAssessmentGrade(int studentID, String subject, String assessmentId){
+    public LinkedList<GradedAssessment> fetchStudentGrade(int studentId, int subjectId){
         PreparedStatement stdGradeQuery; 
-        //LinkedList<Grade> result = new LinkedList<>();
-        //LinkedList<Subject> subjects;
-        GradedAssessment grdAssmnt;
-        Grade grade = new Grade();
+        LinkedList<GradedAssessment> grdAssmnt = new LinkedList<>();
         ResultSet rs;
-        //int studentID;
-        int subjectID;
+
         String assessmentID = "";
             String type= "";
             String topic= "";
@@ -540,27 +536,32 @@ public class DatabaseUtility {
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
             // get the list of Student
             //studentID = fetchStdIdByName(student);
-            subjectID = fetchSubIdByName(subject);
+            //subjectID = fetchSubIdByName(subject);
                 
-            stdGradeQuery   = dbConnection.prepareStatement( "SELECT a.*, sg.GradeID, sg.AssessmentID, g.* FROM studentgrade as sg "+
-                "INNER JOIN assessment as a ON sg.AssessmentID = a.AssessmentID "+
-                "INNER JOIN grade as g ON g.GradeId = sg.GradeId "+
-                "WHERE sg.StudentID = ? AND sg.SubjectID = ? AND sg.AssessmentID = ?"); 
-            stdGradeQuery.setInt(1, studentID);
-            stdGradeQuery.setInt(2, subjectID);
-            stdGradeQuery.setString(3, assessmentId);
+            stdGradeQuery   = dbConnection.prepareStatement( "SELECT s.Name, a.*, sg.GradeID, g.* FROM studentgrade as sg "+
+                " INNER JOIN subject AS s ON sg.SubjectID = s.SubjectID "+
+                " INNER JOIN assessment as a ON (sg.AssessmentID = a.AssessmentID AND sg.SubjectID = a.SubjectID) "+
+                " INNER JOIN grade as g ON g.GradeId = sg.GradeId "+
+                " WHERE sg.StudentID = ? AND sg.SubjectID = ?;"); 
+            stdGradeQuery.setInt(1, studentId);
+            stdGradeQuery.setInt(2, subjectId);
             rs = stdGradeQuery.executeQuery();
             
-            
             while (rs.next()) {
-                grade = new Grade(rs.getString("Achievement"),rs.getString("Knowledge"), rs.getString("Skill"));
-                assessmentId = rs.getString("AssessmentID");
+                Grade grade = new Grade(rs.getString("Achievement"),rs.getString("Knowledge"), rs.getString("Skill"));
+                grdAssmnt.add(new GradedAssessment(rs.getString("AssessmentID"), rs.getString("Type"), rs.getString("Topic"), rs.getString("Format"), rs.getString("DueDate"), grade));
+                
+                 //System.out.println(grdAssmnt);
+                 /*Subject subject = new Subject(rs.getString("SubjectID"), rs.getString("Name"), grdAssmnt);
+                student = new Student();
+                //assessmentId = rs.getString("AssessmentID");
                 System.out.println("AssessmentID: "+rs.getString("AssessmentID"));
                 System.out.println("Type: "+rs.getString("Type"));
-                type = rs.getString("Type");
+                System.out.println("Grade: "+rs.getString("Type"));*/
+                /*type = rs.getString("Type");
                 topic = rs.getString("Topic");
                 format = rs.getString("Format");
-                dueDate = rs.getString("DueDate");
+                dueDate = rs.getString("DueDate");*/
                 //result.add(grade);
             }
             
@@ -570,11 +571,12 @@ public class DatabaseUtility {
             System.out.println("SQLState: " + e.getSQLState());
         e.printStackTrace();
        }
-       grdAssmnt = new GradedAssessment(assessmentID,type,topic ,format, dueDate,grade);
+       /*grdAssmnt = new GradedAssessment(assessmentID,type,topic ,format, dueDate,grade);
+       return grdAssmnt;*/
        return grdAssmnt;
     }
 
-    public GradedAssessment fetchStudentGrade(String student, String subject, String assessmentId){
+    /*public GradedAssessment fetchStudentGrade(String student, String subject, String assessmentId){
         PreparedStatement stdGradeQuery; 
         //LinkedList<Grade> result = new LinkedList<>();
         //LinkedList<Subject> subjects;
@@ -625,5 +627,5 @@ public class DatabaseUtility {
        }
        grdAssmnt = new GradedAssessment(assessmentID,type,topic ,format, dueDate,grade);
        return grdAssmnt;
-    }
+    }*/
 }

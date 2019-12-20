@@ -37,6 +37,7 @@ class Connection extends Thread {
 	LinkedList<Subject> subjResult;
 	LinkedList<Student> studResult;
 	LinkedList<Grade> grdResult;
+	LinkedList<GradedAssessment> stdGrd;
 	SubjectList subjList;
 	StudentList studList;
 	GradeList grdList;
@@ -73,14 +74,7 @@ class Connection extends Thread {
 	        dataObj.createDBtables();
 	        System.out.println("thread from Run: "+"i: "+thrdn+" client count: "+clientCount);
 	        while ((request= (HashMap) inObj.readObject())!=null){
-	        //while ((request= inData.readUTF())!=null){
 	        	System.out.println("Request : "+request.get("type"));
-	        	/*if(request.startsWith("@")){
-	        		orgRequest = request;
-	        		System.out.printf("Found : %s\n",request.substring(1, request.indexOf("@", request.indexOf("@")+1)));
-	        		System.out.println("Request : "+request);
-	        		request = request.substring(1, request.indexOf("@", request.indexOf("@")+1));
-	        	}*/
 	        	requestType = request.get("type");
 				switch(requestType){
 					case "view-assessment-request":
@@ -89,26 +83,12 @@ class Connection extends Thread {
 	        			subjList = new SubjectList(subjResult);
 				        outObj.writeObject(subjList);
 				        break;
+
 				    case "student-list-request":
 				    	studResult = dataObj.fetchStudentList();
 						studList = new StudentList(studResult);
 				    	outObj.writeObject(studList);
 				    	break;
-
-				    case "set-grade-request":
-				    	/*System.out.println(orgRequest.lastIndexOf("set-grade-request"));
-				    	String sub = orgRequest.substring(19,orgRequest.length());
-				    	String[] data = sub.split("&");
-				    	System.out.println(data[0]+ data[1] +data[2]+Integer.parseInt(data[3]));
-				    	dbStatus = dataObj.insertStudentGrade(Integer.parseInt(data[0]), data[1] ,data[2],Integer.parseInt(data[3]));*/
-						dbStatus = dataObj.insertStudentGrade(Integer.parseInt(request.get("studentID")), request.get("subject"), request.get("assessmentID"), Integer.parseInt(request.get("gradeID")));
-						if(dbStatus){
-							HashMap<String, String> response = new HashMap<String, String>();
-							response.put("status","success");
-							outObj.writeObject(response);
-							
-						}
-				        break;
 
 				    case "grade-list-request":
 						grdResult = dataObj.fetchGradeList();
@@ -116,7 +96,20 @@ class Connection extends Thread {
 				    	outObj.writeObject(grdList);
 				        break;
 
-				    default:
+				    case "view-student-grade-request":
+				    	stdGrd = dataObj.fetchStudentGrade(Integer.parseInt(request.get("studentID")), Integer.parseInt(request.get("subjectID")));
+				    	//System.out.println(stdGrd);
+				    	outObj.writeObject(stdGrd);
+				    	break;
+
+				    case "set-grade-request":
+						dbStatus = dataObj.insertStudentGrade(Integer.parseInt(request.get("studentID")), Integer.parseInt(request.get("subjectID")), request.get("assessmentID"), Integer.parseInt(request.get("gradeID")));
+						if(dbStatus){
+							HashMap<String, String> response = new HashMap<String, String>();
+							response.put("status","success");
+							outObj.writeObject(response);
+						}
+				        break;
 				}
 			}
 
