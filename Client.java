@@ -1,12 +1,9 @@
 import java.net.*;
 import java.io.*;
-import java.util.Scanner;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.HashMap;
+import java.util.*;
 
 public class Client {
+  // 
   private static SubjectList subjList;
   private static StudentList studList;
   private static GradeList grdList;
@@ -15,10 +12,13 @@ public class Client {
   private static LinkedList<Student> students;
   private static LinkedList<Grade> grades;
 
+  // Method to display assessment for a subject
   private static void displayAssessment(String subject){
     System.out.printf("Assignment of %s:\n\n",subject);
     
+    // Loop through the linked list of subjects
     for (Subject subj : subjects) {
+      // If subject name in list matches the subject passed in argument then display assessment
       if(subj.getName().equals(subject)){
         for (Assessment assessment : subj.getAssessment()) {
           System.out.println(assessment);
@@ -27,20 +27,21 @@ public class Client {
     }
   }
 
+  // Method to display subject list enrolled by student
   private static void displaySubject(Student student, String option, ObjectOutputStream outObj, ObjectInputStream inObj){
     Scanner sc = new Scanner(System.in);
     int optSubj;
     do{
       System.out.printf("Choose the subject from list below to %s of %s:\n\n",option, student.getFullName());
-      //String[] subjNames = new String[6];
+      // Declaring list of subject to hold subjects temporarily
       List<Subject> listOfsubj = new LinkedList<>();
       for (Student stud : students) {
-        //subjNames = new String[stud.getSubject().size()+1];
+        // If student in list matches the student passed in argument then display subject enrolled by that student
         if(stud.getStudentID()== student.getStudentID()){
-          int i = 1;
+          int i = 1; // Variable to display the subject choice count
           for (Subject subject : stud.getSubject()) {
               System.out.println(i+". "+subject.getName());
-              //subjNames[i] = subject.getName();
+              // storing subjects in list 
               listOfsubj.add(subject);
               i++;
           }
@@ -50,15 +51,21 @@ public class Client {
       System.out.println("\nSelect subject or press 8 to go back or press 0 to exit:");
       optSubj = sc.nextInt();
       
+      /* If user choose between 1 to 5 choices or subjects, 
+      then either call display grade method
+      or set grade method depending on option set
+      */ 
       if (optSubj > 0 && optSubj <= 5) {
+          // If option is view grade, then call view grade method
           if(option.equals("view grade")){
-            viewGrade(student,listOfsubj.get(optSubj-1), outObj, inObj);
+            viewGrade(student, listOfsubj.get(optSubj-1), outObj, inObj);
           }
+          // If option is set grade, then call set grade method
           else if(option.equals("set grade")){
-            setGrade(student,listOfsubj.get(optSubj-1), outObj, inObj);
+            setGrade(student, listOfsubj.get(optSubj-1), outObj, inObj);
           }
       } 
-      // System exit
+      // Exis system if 0 is pressed
       else if (optSubj == 0) {
           System.exit(0);
       }
@@ -66,6 +73,7 @@ public class Client {
       else if (optSubj == 8) {
           break;
       } 
+      // Display invalid message for any other choices
       else {
           System.out.println("Sorry, invalid option!");
       }
@@ -74,21 +82,26 @@ public class Client {
     
   }
 
+  // Method to view grade of student 
   private static void viewGrade(Student student, Subject subject, ObjectOutputStream outObj, ObjectInputStream inObj){            
+    // Create Hashmap to send request to server
     HashMap<String, String> grdRequest = new HashMap<String, String>();
     LinkedList<GradedAssessment> stdGrd;
     
     System.out.printf("Assessment grade for %s in %s: \n\n",student.getFullName(),subject.getName());
     try {
-      
+      // Store type of request along with other data in hashmap and send to server
       grdRequest.put("type","view-student-grade-request");
       grdRequest.put("studentID",Integer.toString(student.getStudentID()));
       grdRequest.put("subjectID",Integer.toString(subject.getId()));
       outObj.writeObject(grdRequest);
 
+      // store the response received from server
       stdGrd = (LinkedList) inObj.readObject();
 
+      // Check if size of (grade)response is greater than 0
       if(stdGrd.size() > 0){
+        // Display grade for the assessment of that subject
         for(Assessment assmnt: subject.getAssessment()){
           String grade = "Not graded";
           for(GradedAssessment grdAssmnt: stdGrd){
@@ -99,8 +112,9 @@ public class Client {
           System.out.printf("Assessment %s (%s): %s\n",assmnt.getAssessmentID(), assmnt.getType(), grade);
         }
       }
+      // If the size of response is less than 0, then no grades set
       else{
-        System.out.printf("Sorry, grades for %s is not yet graded.\n", subject.getName());
+        System.out.printf("Sorry, grades for %s is not set yet.\n", subject.getName());
       }
       System.out.println();
     }
@@ -110,10 +124,9 @@ public class Client {
     catch(ClassNotFoundException ex){
       ex.printStackTrace();
     }
-    
-    
   }
 
+  // Method to set grade of student 
   private static void setGrade(Student student, Subject subject, ObjectOutputStream outObj, ObjectInputStream inObj){
     Scanner sc = new Scanner(System.in);
     int optAsmnt;
@@ -122,18 +135,18 @@ public class Client {
       System.out.printf("Choose the assessment to set grade for %s in %s:\n\n",student.getFullName(),subject.getName());
       String[] asmntID = new String[4];
       for (Student stud : students) {
-        //subjNames = new String[stud.getSubject().size()+1];
+        // Check if current student id is equal to student id in list
         if(stud.getStudentID() == student.getStudentID()){
-          
+          // Access subjects enrolled by that student 
           for (Subject subj : stud.getSubject()) {
             if(subj.getName().equals(subject.getName())){
               int i = 1;
+              // Display the list of assessment to set grades for
               for(Assessment asmnt: subj.getAssessment()){
                 System.out.printf("%d. Assessment %s (%s)\n",i, asmnt.getAssessmentID(),asmnt.getType());
                 asmntID[i] = asmnt.getAssessmentID();
                 i++;
               }
-              //System.out.println();
             }
           }
         }
@@ -142,21 +155,23 @@ public class Client {
       System.out.println("\nSelect assessment or press 8 to go back or press 0 to exit:");
       optAsmnt = sc.nextInt();
       
+      // Check if user select valid assessment from the list
       if (optAsmnt > 0 && optAsmnt <= 3) {
         try {
             while(true){
-              //String[] grdID = new String[6];
-              //asmntID[optAsmnt]
+              // Create Hashmap to send request to server
               HashMap<String, String> grdRequest = new HashMap<String, String>();
+              // Request grade list from server
               grdRequest.put("type","grade-list-request");
               outObj.writeObject(grdRequest);
               System.out.printf("Choose the grade from below list to set grade for %s in %s (%s):\n\n",student.getFullName(),subject.getName(),asmntID[optAsmnt]);
-              //outData.writeUTF("grade-list-request");
               
+              //Store the response received from server
               grdList = (GradeList) inObj.readObject();
               grades = grdList.getGrade();
               String[] gradesVals = new String[grades.size()+1];
               int i = 1;
+              // Display the grade list to user
               for(Grade grd: grades){
                 System.out.println(i+". "+grd.getAchievement());
                 gradesVals[i] = grd.getAchievement();
@@ -165,26 +180,26 @@ public class Client {
               System.out.println("\nSelect grade or press 8 to go back or press 0 to exit:");
               optGrd = sc.nextInt();
 
+              // Check if valid grade list is selected
               if (optGrd > 0 && optGrd <= 5) {
                 // Sending set grade request to server
                 HashMap<String, String> setGrdrequest = new HashMap<String, String>();
                 HashMap<String, String> response;
+                // Send grades and other information to server to set grade
                 setGrdrequest.put("type","set-grade-request");
                 setGrdrequest.put("studentID",Integer.toString(student.getStudentID()));
                 setGrdrequest.put("subjectID",Integer.toString(subject.getId()));
                 setGrdrequest.put("assessmentID",asmntID[optAsmnt]);
                 setGrdrequest.put("gradeID",Integer.toString(optGrd));
                 outObj.writeObject(setGrdrequest);
-                
 
+                // Store response send by server
                 response = (HashMap) inObj.readObject();
+                // If success status is received then display success message
                 if(response.get("status").equals("success")){
                   System.out.printf("Grade \"%s\" successfully set for %s in %s (%s) \n\n",gradesVals[optGrd], student.getFullName(), subject.getName(), asmntID[optAsmnt]);
                 }
                 optGrd = 8;
-                /*outData.writeUTF("@set-grade-request@"+student.getStudentID()+"&"+subject+"&"+asmntID[optAsmnt]+"&"+optGrd);
-                grdAssmnt = (GradedAssessment) inObj.readObject();
-                System.out.println("ID: "+grdAssmnt.getAssessmentID());*/
               }
               // System exit
               else if (optGrd == 0) {
@@ -201,6 +216,7 @@ public class Client {
             }
             
         }
+        // Catch exceptions
         catch(ArrayIndexOutOfBoundsException exception) {
             System.out.println("Sorry, invalid option!");
         }
@@ -220,6 +236,7 @@ public class Client {
       else if (optAsmnt == 8) {
           break;
       } 
+      // Display invalid message
       else {
           System.out.println("Sorry, invalid option!");
       }
@@ -233,26 +250,20 @@ public class Client {
     Socket s = null;
     
     try{
+      // Initilizing port to communicate with server
       int serverPort = 8888;
-      
+      // Creating socket to communicate with server
       s = new Socket("localhost", serverPort);    
       
+      // Declaring and initializing Object stream 
       ObjectOutputStream outObj = new ObjectOutputStream( s.getOutputStream());;
       ObjectInputStream inObj  =new ObjectInputStream(s.getInputStream());;
-
-      DataInputStream inData = new DataInputStream(s.getInputStream());
-      DataOutputStream outData = new DataOutputStream(s.getOutputStream());
 
       Scanner sc = new Scanner(System.in);
       int userType;
 
       do{
-        System.out.println("\n\nWelcome to Study Progress Monitor System\n");
-        System.out.println("1. Administrator");
-        System.out.println("2. Guest");
-        System.out.println("\nSelect user type or press 0 to exit:");
-        userType = sc.nextInt();
-
+        // Initilizing values to display to user
         String optOne = "1. List of assessments for a chosen subject";
         String optTwo = "2. Grades of assessments for a student";
         String optThree = "3. Set grade for a chosen student and subject";
@@ -260,41 +271,56 @@ public class Client {
         String viewAsses = "Choose the subject from below list to view assessment:\n";
         String viewGrd = "Choose the Student from below list to view assessment grades:\n";
         String setGrd = "Choose the Student from below list to set grades:\n";
-        String subjListRequest = "Subject List";
-        String studListRequest = "Student List";
         int optInput;
         int optSubj;
         int optStud;
-        
+        String user;
 
-        switch(userType){
-            // Administrator 
-            case 1:
-              System.out.println("\nWelcome Administrator");
-              do{
-                
+        // Welcome message to user
+        System.out.println("\n\nWelcome to Study Progress Monitor System\n");
+        System.out.println("1. Administrator");
+        System.out.println("2. Parents/Students");
+        System.out.println("\nSelect user type or press 0 to exit:");
+        userType = sc.nextInt();
+
+        // Set user string depending upon user type
+        user = (userType == 1 )? "Administrator" : "Parents/Students";
+
+        // Display the menu until user choose option
+        do{
+                System.out.printf("\nWelcome %s \n",user); // Welcome message for user
+
+                // Display view assessment and view grades menu to all users
                 System.out.println("\n"+optOne);
                 System.out.println(optTwo);
-                System.out.println(optThree);
-                System.out.println("\nSelect your option or press 0 to exit:");
-
-                optInput = sc.nextInt();
                 
+                // Display set grade menu only to Administrator
+                if(userType == 1){
+                  System.out.println(optThree);
+                }
+
+                // prompt for user input
+                System.out.println("\nSelect your option or press 0 to exit:");
+                optInput = sc.nextInt();
+
+                // Perform operation based on user input
                 switch(optInput){
                   // View assessment
                   case 1:
                       do{
+                        // Create Hashmap to send request to server
                         HashMap<String, String> request = new HashMap<String, String>();
                         System.out.println(viewAsses);
-                        //outData.writeUTF("view-assessment-request");
+                        // Store type of request in hashmap and send to server
                         request.put("type","view-assessment-request");
                         outObj.writeObject(request);
+
+                        // store the response received from server
                         subjList = (SubjectList) inObj.readObject();  
-                        //getClass().getName()
-                        //System.out.println("subjList : " + subjList.getSubject());
                         subjects = subjList.getSubject();
                         String[] subjNames = new String[subjects.size()+1];
                         int i = 1;
+                        // Display list of subjects received from server
                         for (Subject subj : subjects) {
                             System.out.println(i+". "+subj.getName());
                             subjNames[i] = subj.getName();
@@ -303,9 +329,11 @@ public class Client {
                         System.out.println("\nSelect subject or press 8 to go back or press 0 to exit:");
                         optSubj = sc.nextInt();                        
 
+                        // If user select valid option then display assessment 
                         if(optSubj >0 && optSubj <=5){
                           displayAssessment(subjNames[optSubj]);
                         }
+                        // Exit application if 0 is pressed
                         else if(optSubj == 0){
                           System.exit(0);
                         }
@@ -313,6 +341,7 @@ public class Client {
                         else if(optSubj == 8){
                           break;
                         }
+                        // Display invalid option message
                         else{
                           System.out.println("Sorry, invalid option!");
                         }
@@ -323,30 +352,34 @@ public class Client {
                   case 2:
                     // View grades
                       do{
+                        // Create Hashmap to send request to server
                         HashMap<String, String> request = new HashMap<String, String>();
                         System.out.println(viewGrd);
+
+                        // Store type of request in hashmap and send to server
                         request.put("type","student-list-request");
                         outObj.writeObject(request);
-                        studList = (StudentList) inObj.readObject();  
-                        //System.out.println("====================================");
-                        //System.out.println("studList : " + studList);
 
+                        // store the response received from server
+                        studList = (StudentList) inObj.readObject();  
                         students = studList.getStudent();
-                        /*List<Student> stud = new int[students.size()+1];*/
+
                         List<Student> listOfstud = new LinkedList<>();
                         int i = 1;
+                        // Display list of students received from server
                         for (Student stud : students) {
                             System.out.println(i+". "+stud.getFullName());
-                            //studIds[i] = stud.getStudentID();
                             listOfstud.add(stud);
                             i++;
                         }
                         System.out.println("\nSelect student or press 8 to go back or press 0 to exit:");
                         optStud = sc.nextInt();
                         
+                        // If user select valid option then display subjects enrolled by that student 
                         if(optStud >0 && optStud <=5){
                           displaySubject(listOfstud.get(optStud-1),"view grade", outObj, inObj);
                         }
+                        // Exit application if 0 is pressed
                         else if(optStud == 0){
                           System.exit(0);
                         }
@@ -354,6 +387,7 @@ public class Client {
                         else if(optStud == 8){
                           break;
                         }
+                        // Display invalid option message
                         else{
                           System.out.println("Sorry, invalid option!");
                         }
@@ -363,76 +397,65 @@ public class Client {
                       break;
                   case 3:
                       //Set grades
-                      do{
-                        HashMap<String, String> request = new HashMap<String, String>();
-                        System.out.println(setGrd);
-                        request.put("type","student-list-request");
-                        outObj.writeObject(request);
-                        studList = (StudentList) inObj.readObject();  
-                        //System.out.println("====================================");
-                        //System.out.println("studList : " + studList);
+                      if(userType == 1){ // Set grade is accessed by Administrator only
+                        do{
+                          // Create Hashmap to send request to server
+                          HashMap<String, String> request = new HashMap<String, String>();
+                          System.out.println(setGrd);
 
-                        students = studList.getStudent();
-                        /*int[] studIds = new int[students.size()+1];*/
-                        List<Student> listOfstud = new LinkedList<>();
-                        int i = 1;
-                        for (Student stud : students) {
-                            System.out.println(i+". "+stud.getFullName());
-                            /*studIds[i] = stud.getStudentID();*/
-                            listOfstud.add(stud);
-                            i++;
-                        }
-                        System.out.println("\nSelect student or press 8 to go back or press 0 to exit:");
-                        optStud = sc.nextInt();
+                          // Store type of request in hashmap and send to server
+                          request.put("type","student-list-request");
+                          outObj.writeObject(request);
 
-                        if(optStud >0 && optStud <=5){
-                          displaySubject(listOfstud.get(optStud-1),"set grade",outObj, inObj);
-                        }
-                        else if(optStud == 0){
-                          System.exit(0);
-                        }
-                        // Go back to previous menu if 8 is pressed
-                        else if(optStud == 8){
-                          break;
-                        }
-                        else{
-                          System.out.println("Sorry, invalid option!");
-                        }
+                          // store the response received from server
+                          studList = (StudentList) inObj.readObject();  
+                          students = studList.getStudent();
 
-                      }while(optStud != 0);
+                          List<Student> listOfstud = new LinkedList<>();
+                          int i = 1;
+                          // Display list of students received from server
+                          for (Student stud : students) {
+                              System.out.println(i+". "+stud.getFullName());
+                              listOfstud.add(stud);
+                              i++;
+                          }
+                          System.out.println("\nSelect student or press 8 to go back or press 0 to exit:");
+                          optStud = sc.nextInt();
 
+                          // If user select valid option then display subjects enrolled by that student 
+                          if(optStud >0 && optStud <=5){
+                            displaySubject(listOfstud.get(optStud-1),"set grade",outObj, inObj);
+                          }
+                          // Exit application if 0 is pressed
+                          else if(optStud == 0){
+                            System.exit(0);
+                          }
+                          // Go back to previous menu if 8 is pressed
+                          else if(optStud == 8){
+                            break;
+                          }
+                          // Display invalid option message
+                          else{
+                            System.out.println("Sorry, invalid option!");
+                          }
+
+                        }while(optStud != 0);
+                      }
+                      else{
+                        System.out.println("Sorry, invalid option!");
+                      }
+                    
                       break;
+                   // Exit application if 0 is pressed
                   case 0:
                     System.exit(0);
                 }
               }while(optInput !=0);
-            
-                
-                break;
-
-            // Guest
-            case 2:
-                System.out.println("\nWelcome Guest");
-                System.out.println("\n"+optOne);
-                System.out.println(optTwo);
-                System.out.println("\nSelect your option or press 0 to exit:");
-                optInput = sc.nextInt();
-                switch(optInput){
-                  case 1:
-                      System.out.println(viewAsses);
-                      break;
-                  case 2:
-                      System.out.println(viewGrd);
-                      break;
-                  case 0:
-                    System.exit(0);
-                }
-                break;
-            }
 
       }while(userType!=0);
 
     }
+    // Catch exceptions
     catch (UnknownHostException e){
       System.out.println("Socket:"+e.getMessage());
     }

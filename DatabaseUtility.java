@@ -92,7 +92,7 @@ public class DatabaseUtility {
         STUDENTGRADE_TBL_QRY =  "CREATE TABLE `StudentGrade` (" +
                             "  `StudentID` int(10) NOT NULL," +
                             "  `SubjectID` int(10) NOT NULL," +
-                            "  `AssessmentID` varchar(255) NOT NULL," +
+                            "  `AssessmentID` varchar(5) NOT NULL," +
                             "  `GradeID` int(10) NOT NULL," +
                             "  PRIMARY KEY (`StudentID`,`SubjectID`,`AssessmentID`,`GradeID`)" +
                             ") ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;";
@@ -227,20 +227,18 @@ public class DatabaseUtility {
         return true;
     }
     
-    /**
-     * login
-     * @return 
-     */
     
-    
+    // Method to read data from file and store to database
     public String[][] readDataFile(){
         Scanner input = null;
         String[][] res = new String[14][6];
         try{
+            // Get file URL
             InputStream url = getClass().getResourceAsStream("COIT20257Ass2Data.csv");// refer to same location with class files
             input = new Scanner(url);
             int row = 0;
             String[] arr;
+            // Read data from file and store in array
             while(input.hasNextLine()){
                 arr = input.nextLine().split(",");
                 if(row > 0){// skip the first line
@@ -263,24 +261,28 @@ public class DatabaseUtility {
         return res;
     }
     
+    // Method to add assessment record
     public boolean addAssessmentRecord(){
+      // Declaring prepared statement
        PreparedStatement addRecord;
        PreparedStatement subjectQuery;
         try {
            if (dbConnection  == null)// connect to MySql 
               dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD); 
              String[][] result = this.readDataFile();
+             // loop through data stored in file
              for(String[] res:result){
-                //System.out.println(res[0]);
+                // Creating prepared statement to insert record
                 addRecord   = dbConnection.prepareStatement( "INSERT INTO Assessment " +
                         "(SubjectID, AssessmentID, Type, Topic,Format, DueDate)" +
                                    "VALUES (?,?,?,?,?,?)");  
+                // DB query to fetch subject id from subject name
                 subjectQuery   = dbConnection.prepareStatement( "SELECT * FROM subject WHERE Name = ?"); 
                 subjectQuery.setString(1, res[0]);
                 ResultSet rs = subjectQuery.executeQuery();
                 
+                // add record to assessment table
                 while (rs.next()) {
-                    System.out.println(rs.getString("SubjectID"));
                     int subjectID = Integer.parseInt(rs.getString("SubjectID"));
                     addRecord.setInt(1, subjectID);
                 }
@@ -296,32 +298,30 @@ public class DatabaseUtility {
         } 
         catch(SQLException e) {
                  System.out.println("Connection Failed! Check output console");
-                                    System.out.println("SQLException: " + e.getMessage());
-                                    System.out.println("SQLState: " + e.getSQLState());
+                 System.out.println("SQLException: " + e.getMessage());
+                 System.out.println("SQLState: " + e.getSQLState());
                  e.printStackTrace();
                  return false;
         }
         return true;
     }
     
+    // Method to fetch assessment list from database
     public LinkedList<Assessment> fetchAssessmentList(int subjectID){
+      // Declaring prepared statement
         PreparedStatement assessmentRec; 
         LinkedList<Assessment> result = new LinkedList<>();
         Assessment assessment;
         try {
             if  (dbConnection  == null)//connect to MySql ;
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
-            // get the list of Energy_needs
+            // get the list of assessment
             assessmentRec   = dbConnection.prepareStatement( "SELECT  * FROM assessment WHERE SubjectID = ?;"); 
             assessmentRec.setInt(1, subjectID);
             ResultSet rs = assessmentRec.executeQuery();
             
+            // Loop through assessment list and store in linked list of Assessment class
             while (rs.next()) {
-                /*result.add(rs.getString("AssessmentID"));
-                result.add(rs.getString("Type"));
-                result.add(rs.getString("Topic"));
-                result.add(rs.getString("Format"));
-                result.add(rs.getString("DueDate"));*/
                 assessment = new Assessment(rs.getString("AssessmentID"), rs.getString("Type"), rs.getString("Topic"), rs.getString("Format"), rs.getString("DueDate"));
                 result.add(assessment);
             }
@@ -334,7 +334,9 @@ public class DatabaseUtility {
         return result;
     }
 
+    // Method to fetch subject list from database
     public LinkedList<Subject> fetchSubjectList(){
+      // Declaring prepared statement
         PreparedStatement subjRec; 
         LinkedList<Subject> result = new LinkedList<>();
         LinkedList<Assessment> assessment;
@@ -342,12 +344,12 @@ public class DatabaseUtility {
         try {
             if  (dbConnection  == null)//connect to MySql ;
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
-            // get the list of Energy_needs
+            // get the list of subject
             subjRec   = dbConnection.prepareStatement( "SELECT * FROM subject"); 
             ResultSet rs = subjRec.executeQuery();
             
+             // Loop through subject list and store in linked list of Subject class
             while (rs.next()) {
-                //result.add(rs.getString("Name"));
                 assessment = fetchAssessmentList(rs.getInt("SubjectID"));
                 subj = new Subject(rs.getInt("SubjectID"), rs.getString("Name"), assessment);
                 result.add(subj);
@@ -361,7 +363,9 @@ public class DatabaseUtility {
         return result;
     }
 
+    // Method to fetch student list from database
     public LinkedList<Student> fetchStudentList(){
+      // Declaring prepared statement
         PreparedStatement studRec; 
         LinkedList<Student> result = new LinkedList<>();
         LinkedList<Subject> subjects;
@@ -373,8 +377,8 @@ public class DatabaseUtility {
             studRec   = dbConnection.prepareStatement( "SELECT * FROM student"); 
             ResultSet rs = studRec.executeQuery();
             
+            // Loop through student record and store in linked list of Student class
             while (rs.next()) {
-                //result.add(rs.getString("Name"));
                 subjects = fetchSubjectList();
                 stud = new Student(rs.getInt("StudentID"),rs.getString("FullName"),rs.getInt("YearLevel"), subjects);
                 result.add(stud);
@@ -388,18 +392,20 @@ public class DatabaseUtility {
         return result;
     }
 
+    // Method to fetch grade list from database
     public LinkedList<Grade> fetchGradeList(){
+      // Declaring prepared statement
         PreparedStatement gradeRec; 
         LinkedList<Grade> result = new LinkedList<>();
-        //LinkedList<Subject> subjects;
         Grade grade;
         try {
             if  (dbConnection  == null)//connect to MySql ;
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
-            // get the list of Student
+            // get the list of grade
             gradeRec   = dbConnection.prepareStatement( "SELECT * FROM grade"); 
             ResultSet rs = gradeRec.executeQuery();
             
+            // Loop through grade record and store in linked list of Grade class
             while (rs.next()) {
                 grade = new Grade(rs.getString("Achievement"),rs.getString("Knowledge"), rs.getString("Skill"));
                 result.add(grade);
@@ -413,28 +419,27 @@ public class DatabaseUtility {
         return result;
     }
 
+    // Method to check if assessment is graded
      public boolean checkAssignmentGraded(int studentId, int subjectId, String assessmentId){
+      // Declaring prepared statement
         PreparedStatement grdQuery;
         ResultSet rs;
         int subjectID;
         try{
             if  (dbConnection  == null)//connect to MySql ;
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);
+                 // get the list of student grade
                 grdQuery   = dbConnection.prepareStatement( "SELECT * FROM studentgrade WHERE StudentID = ? AND SubjectID = ? AND AssessmentID = ?"); 
                 grdQuery.setInt(1, studentId);
                 grdQuery.setInt(2, subjectId);
                 grdQuery.setString(3, assessmentId);
                 rs = grdQuery.executeQuery();
                 
+                // Check if rows is returned by query
+                // if row exists then assessment is graded for assignment
                 if(rs.isBeforeFirst()){
                   return true;
                 }
-                /*while (rs.next()) {
-                    System.out.println(rs.getString("SubjectID"));
-                    subjectID = Integer.parseInt(rs.getString("SubjectID"));
-                    return subjectID;
-                    //addRecord.setInt(1, studentID);
-                }*/
         }
         catch(SQLException e) {
                  System.out.println("Connection Failed! Check output console");
@@ -442,11 +447,13 @@ public class DatabaseUtility {
                                     System.out.println("SQLState: " + e.getSQLState());
                  e.printStackTrace();
         }
+        // Return false if assessment is not graded
         return false;
     }
 
+    // Method to insert student grade
     public boolean insertStudentGrade(int studentId, int subjectId, String assessmentId, int gradeId){
-       
+      // Declaring prepared statement
        PreparedStatement addRecord;
        PreparedStatement updateRecord;
        ResultSet rs;
@@ -454,8 +461,9 @@ public class DatabaseUtility {
         try {
            if (dbConnection  == null)// connect to MySql 
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD); 
+                // Call method to check if assignment is graded
                 recordExist = checkAssignmentGraded(studentId, subjectId, assessmentId);
-                System.out.println("Record exists: "+recordExist);
+                // If assignment is already graded for student then just update previous record 
                 if(recordExist){
                   updateRecord   = dbConnection.prepareStatement( "UPDATE studentgrade " +
                         " SET GradeID = ? "+
@@ -466,6 +474,7 @@ public class DatabaseUtility {
                   updateRecord.setString(4, assessmentId);
                   updateRecord.executeUpdate(); 
                 }
+                // If assignment is not graded for student then just insert new record 
                 else{
                   addRecord   = dbConnection.prepareStatement( "REPLACE INTO studentgrade " +
                         "(StudentID, SubjectID, AssessmentID, GradeID)" +
@@ -488,20 +497,18 @@ public class DatabaseUtility {
         return true;
     }
 
+    // Method to fetch student grade from database
     public LinkedList<GradedAssessment> fetchStudentGrade(int studentId, int subjectId){
+      // Declaring prepared statement
         PreparedStatement stdGradeQuery; 
         LinkedList<GradedAssessment> grdAssmnt = new LinkedList<>();
         ResultSet rs;
 
-        String assessmentID = "";
-            String type= "";
-            String topic= "";
-            String format= "";
-            String dueDate= "";
         try {
             if  (dbConnection  == null)//connect to MySql ;
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
-                
+            
+            // Query to fetch grade for assessment in particular subject for student 
             stdGradeQuery   = dbConnection.prepareStatement( "SELECT s.Name, a.*, sg.GradeID, g.* FROM studentgrade as sg "+
                 " INNER JOIN subject AS s ON sg.SubjectID = s.SubjectID "+
                 " INNER JOIN assessment as a ON (sg.AssessmentID = a.AssessmentID AND sg.SubjectID = a.SubjectID) "+
@@ -525,56 +532,4 @@ public class DatabaseUtility {
        return grdAssmnt;
     }
 
-    /*public GradedAssessment fetchStudentGrade(String student, String subject, String assessmentId){
-        PreparedStatement stdGradeQuery; 
-        //LinkedList<Grade> result = new LinkedList<>();
-        //LinkedList<Subject> subjects;
-        GradedAssessment grdAssmnt;
-        Grade grade = new Grade();
-        ResultSet rs;
-        int studentID;
-        int subjectID;
-        String assessmentID = "";
-            String type= "";
-            String topic= "";
-            String format= "";
-            String dueDate= "";
-        try {
-            if  (dbConnection  == null)//connect to MySql ;
-                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
-            // get the list of Student
-            studentID = fetchStdIdByName(student);
-            subjectID = fetchSubIdByName(subject);
-                
-            stdGradeQuery   = dbConnection.prepareStatement( "SELECT a.*, sg.GradeID, sg.AssessmentID, g.* FROM studentgrade as sg "+
-                "INNER JOIN assessment as a ON sg.AssessmentID = a.AssessmentID "+
-                "INNER JOIN grade as g ON g.GradeId = sg.GradeId "+
-                "WHERE sg.StudentID = ? AND sg.SubjectID = ? AND sg.AssessmentID = ?"); 
-            stdGradeQuery.setInt(1, studentID);
-            stdGradeQuery.setInt(2, subjectID);
-            stdGradeQuery.setString(3, assessmentId);
-            rs = stdGradeQuery.executeQuery();
-            
-            
-            while (rs.next()) {
-                grade = new Grade(rs.getString("Achievement"),rs.getString("Knowledge"), rs.getString("Skill"));
-                assessmentId = rs.getString("AssessmentID");
-                System.out.println("AssessmentID: "+rs.getString("AssessmentID"));
-                System.out.println("Type: "+rs.getString("Type"));
-                type = rs.getString("Type");
-                topic = rs.getString("Topic");
-                format = rs.getString("Format");
-                dueDate = rs.getString("DueDate");
-                //result.add(grade);
-            }
-            
-        }catch(SQLException e) {
-            System.out.println("Connection Failed! Check output console");
-            System.out.println("SQLException: " + e.getMessage());
-            System.out.println("SQLState: " + e.getSQLState());
-        e.printStackTrace();
-       }
-       grdAssmnt = new GradedAssessment(assessmentID,type,topic ,format, dueDate,grade);
-       return grdAssmnt;
-    }*/
 }
