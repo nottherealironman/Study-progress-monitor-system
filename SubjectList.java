@@ -3,20 +3,25 @@ import java.util.LinkedList;
 
 public class SubjectList implements Serializable
  {
+ 	// Declaration of member variables
  	private LinkedList<Subject> subject;
 	
+	// Constructor
 	public SubjectList(LinkedList<Subject> subject) {
 	     this.subject = subject;
 	}
 
+	// Definition of Accessors methods
 	public LinkedList<Subject> getSubject() {
 		return subject;
 	}
 
+	// Definition of mutators methods
 	public void setSubject(LinkedList<Subject> subject) {
 		this.subject = subject;
 	}
 
+	// toString method definition
 	@Override
 	public String toString()
      {

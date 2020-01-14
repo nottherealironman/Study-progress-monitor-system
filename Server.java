@@ -1,10 +1,6 @@
 import java.net.*;
 import java.io.*;
-import java.util.*;/*
-import java.util.LinkedList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashMap;*/
+import java.util.*;
 
 public class Server {
 	private static int clientCount;
@@ -16,8 +12,8 @@ public class Server {
 			// Creating socket to communicate with client
 			ServerSocket listenSocket = new ServerSocket(serverPort);
 			int i=0;
+			System.out.println("Server started");
 			while(true) {
-				System.out.println("Server started");
 				// Creating socket to listen to client request
 				Socket clientSocket = listenSocket.accept();
 				clientCount++;
@@ -33,8 +29,6 @@ class Connection extends Thread {
 	// Declaration of classes, variables, list and streams
 	ObjectInputStream inObj;
 	ObjectOutputStream outObj;
-	DataInputStream inData;
-	DataOutputStream outData;
 	Socket s;
 	int thrdn;
 	int clientCount;
@@ -63,7 +57,7 @@ class Connection extends Thread {
 			inObj = new ObjectInputStream(s.getInputStream());
 	        outObj =new ObjectOutputStream(s.getOutputStream());
 			
-	      	System.out.println(" Client count: "+client);
+	      	System.out.println("Client count: "+client);
 	      	// Calling start method of thread to handle client request
 			this.start();
 		} catch(IOException e) {System.out.println("Connection:"+e.getMessage());}
@@ -72,6 +66,7 @@ class Connection extends Thread {
 	public void run(){
 		
 		try {		
+			System.out.printf("Thread %d for Client %d\n",thrdn, clientCount);
 			// Method to create and populate tables automatically
 	        dataObj.createDBtables();
 

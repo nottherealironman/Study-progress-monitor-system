@@ -5,18 +5,22 @@ public class GradeList implements Serializable
  {
  	private LinkedList<Grade> grade;
 	
+	// Constructor
 	public GradeList(LinkedList<Grade> grade) {
 	     this.grade = grade;
 	}
 
+	// Definition of Accessors methods
 	public LinkedList<Grade> getGrade() {
 		return grade;
 	}
 
+	// Definition of mutators methods
 	public void setGrade(LinkedList<Grade> grade) {
 		this.grade = grade;
 	}
 
+	// toString method definition
 	@Override
 	public String toString()
      {

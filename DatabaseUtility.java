@@ -129,6 +129,7 @@ public class DatabaseUtility {
         
     }
     
+    // Method to create database and tables
     public boolean createDBtables()
     {
         boolean dbExists = false;
@@ -249,7 +250,7 @@ public class DatabaseUtility {
             input.close();
         } 
         catch (NullPointerException e){
-            System.err.println("Error opening or close the file."); 
+            System.err.println("Error opening or close the file. Please, include COIT20257Ass2Data.csv file in same folder as other class files"); 
             System.exit(0);
         }
         catch (NoSuchElementException elemntException) { // Read content

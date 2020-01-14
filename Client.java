@@ -3,7 +3,7 @@ import java.io.*;
 import java.util.*;
 
 public class Client {
-  // 
+  // Declaration of member variables
   private static SubjectList subjList;
   private static StudentList studList;
   private static GradeList grdList;
