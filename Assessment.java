@@ -2,6 +2,8 @@ import java.io.Serializable;
 
 public class Assessment implements Serializable
  {
+
+ 	
  	// Declaration of member variables
 	private String assessmentID;
 	private String type;
