@@ -1,6 +1,12 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.security.KeyFactory;
+import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
+import java.security.spec.X509EncodedKeySpec;
+import java.security.spec.InvalidKeySpecException;
+import javax.crypto.Cipher;
 
 public class Client {
   // Declaration of member variables
@@ -11,6 +17,8 @@ public class Client {
   private static LinkedList<Subject> subjects;
   private static LinkedList<Student> students;
   private static LinkedList<Grade> grades;
+  private static LinkedList<String> menuList;
+  private static PublicKey publicKey;
 
   // Method to display assessment for a subject
   private static void displayAssessment(String subject){
@@ -244,11 +252,26 @@ public class Client {
     
       
   }
-  
+
+  /**
+   *  encrypt
+   * @param message
+   * @return
+   * @throws Exception
+   */
+  public static byte [] encrypt( String message) throws Exception {
+    Cipher cipher = Cipher.getInstance("RSA");
+    cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+
+    byte [] cipherData = cipher.doFinal(message.getBytes("UTF-8"));
+    return cipherData;
+  }
+
   public static void main (String args[]) {
     
     Socket s = null;
-    
+    byte []  bytesPublicKey = null;
+
     try{
       // Initilizing port to communicate with server
       int serverPort = 8888;
@@ -256,11 +279,15 @@ public class Client {
       s = new Socket("localhost", serverPort);    
       
       // Declaring and initializing Object stream 
-      ObjectOutputStream outObj = new ObjectOutputStream( s.getOutputStream());;
-      ObjectInputStream inObj  =new ObjectInputStream(s.getInputStream());;
+      ObjectOutputStream outObj = new ObjectOutputStream( s.getOutputStream());
+      ObjectInputStream inObj  =new ObjectInputStream(s.getInputStream());
+      DataInputStream inData = new DataInputStream(s.getInputStream());
+      DataOutputStream outData =new DataOutputStream(s.getOutputStream());
+      HashMap<String, String> request = new HashMap<String, String>();
+      HashMap<String, String> response = new HashMap<String, String>();
 
       Scanner sc = new Scanner(System.in);
-      int userType;
+      int userType = 0;
 
       do{
         // Initilizing values to display to user
@@ -275,20 +302,81 @@ public class Client {
         int optSubj;
         int optStud;
         String user;
+        String msgServer;
 
         // Welcome message to user
         System.out.println("\n\nWelcome to Study Progress Monitor System\n");
-        System.out.println("1. Administrator");
-        System.out.println("2. Parents/Students");
-        System.out.println("\nSelect user type or press 0 to exit:");
-        userType = sc.nextInt();
 
+        do {
+          // sent hello to server and get menu
+          request = new HashMap<String, String>();
+          request.put("type", "hello");
+          outObj.writeObject(request);
+          // display menu
+          System.out.println("\n" + inData.readUTF());
+
+          // register or login
+          String LoginType = sc.nextLine();
+          request = new HashMap<String, String>();
+          request.put("type", "hello");
+          request.put("LoginType",LoginType);
+          outObj.writeObject(request);
+          System.out.println(inData.readUTF());
+
+          // user Type
+          String inputUserType = sc.nextLine();
+          request = new HashMap<String, String>();
+          request.put("type", "hello");
+          request.put("LoginType",LoginType);
+          request.put("userType",inputUserType);
+          outObj.writeObject(request);
+          System.out.print(inData.readUTF()+"\n");
+
+          // user name
+          int pubKeyLength = 0;
+          String inputUserName;
+          while (pubKeyLength == 0) {
+            inputUserName = sc.nextLine();
+            request = new HashMap<String, String>();
+            request.put("type", "hello");
+            request.put("LoginType",LoginType);
+            request.put("userType",inputUserType);
+            request.put("UserName",inputUserName);
+            outObj.writeObject(request);
+            System.out.println(inData.readUTF());
+            pubKeyLength = inData.readInt();
+          }
+          if(publicKey == null && pubKeyLength > 0) {
+            //read the size PublicKey
+            bytesPublicKey = new byte[pubKeyLength];
+            //read the PublicKey in bytes sent from the sever
+            inData.readFully(bytesPublicKey, 0, pubKeyLength);
+            //generate the key speciifcation for encoding
+            X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(bytesPublicKey);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            //extract the PublicKey
+            publicKey = keyFactory.generatePublic(pubKeySpec);
+          }
+
+          //ecrypt the password
+          byte[] encodedmessage =  encrypt(sc.nextLine());
+          request = new HashMap<String, String>();
+          request.put("type","register");
+          outObj.writeObject(request);
+          //send the encrypted password length
+          outData.writeInt(encodedmessage.length);
+          //send the encrypted password in bytes
+          outData.write(encodedmessage, 0, encodedmessage.length);
+
+          System.out.println(inData.readUTF());
+        } while (userType==0);
+
+        userType = sc.nextInt();
         // Set user string depending upon user type
         user = (userType == 1 )? "Administrator" : "Parents/Students";
-
         // Display the menu until user choose option
         do{
-                System.out.printf("\nWelcome %s \n",user); // Welcome message for user
+               System.out.printf("\nWelcome %s \n",user); // Welcome message for user
 
                 // Display view assessment and view grades menu to all users
                 System.out.println("\n"+optOne);
@@ -309,7 +397,7 @@ public class Client {
                   case 1:
                       do{
                         // Create Hashmap to send request to server
-                        HashMap<String, String> request = new HashMap<String, String>();
+                        request = new HashMap<String, String>();
                         System.out.println(viewAsses);
                         // Store type of request in hashmap and send to server
                         request.put("type","view-assessment-request");
@@ -353,7 +441,7 @@ public class Client {
                     // View grades
                       do{
                         // Create Hashmap to send request to server
-                        HashMap<String, String> request = new HashMap<String, String>();
+                        request = new HashMap<String, String>();
                         System.out.println(viewGrd);
 
                         // Store type of request in hashmap and send to server
@@ -400,7 +488,7 @@ public class Client {
                       if(userType == 1){ // Set grade is accessed by Administrator only
                         do{
                           // Create Hashmap to send request to server
-                          HashMap<String, String> request = new HashMap<String, String>();
+                          request = new HashMap<String, String>();
                           System.out.println(setGrd);
 
                           // Store type of request in hashmap and send to server
@@ -465,8 +553,17 @@ public class Client {
     catch (IOException e){
       System.out.println("readline:"+e.getMessage());
     }
+    catch (NoSuchAlgorithmException e){
+      System.out.println("Algorithm: "+ e.getMessage());
+    }
     catch(ClassNotFoundException ex){
            ex.printStackTrace();
+    }
+    catch (InvalidKeySpecException e){
+      System.out.println("invalid key: "+ e.getMessage());
+    }
+    catch (Exception e) {
+      System.out.println("Exception: "+e.getMessage());
     }
     finally {
       if(s!=null) 

@@ -13,11 +13,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
+import java.util.*;
+
 
 /**
  *
@@ -32,16 +29,18 @@ public class DatabaseUtility {
     private final String USER_NAME;
     private final String PASSWORD;
     
+    private final String USER_TBL_QRY;
     private final String STUDENT_TBL_QRY;
     private final String SUBJECT_TBL_QRY;
     private final String ASSESSMENT_TBL_QRY;
     private final String GRADE_TBL_QRY;
     private final String STUDENTGRADE_TBL_QRY;
+    private final String INSERT_USER_QRY;
     private final String INSERT_STUDENT_QRY;
     private final String INSERT_SUBJECT_QRY;
     private final String INSERT_GRADE_QRY;
     private DatabaseMetaData dbmd;
-    private final String DATABASE_NAME  = "SPMS";
+    private final String DATABASE_NAME  = "spms";
     
     public DatabaseUtility(){
         
@@ -53,8 +52,18 @@ public class DatabaseUtility {
         statement = null;
         //sql query to create database.
         dbCreateSQL = "CREATE DATABASE " + DATABASE_NAME ;
+        //sql queries to create User Table
+        USER_TBL_QRY =  "CREATE TABLE `S_User` (" +
+                "  `UserID` int(10) NOT NULL AUTO_INCREMENT," +
+                "  `FullName` varchar(50) NOT NULL DEFAULT ''," +
+                "  `Password` varchar(150) NOT NULL DEFAULT ''," +
+                "  `Type` tinyint(2) NOT NULL DEFAULT '0'," +
+                "  `StudentID` tinyint(10) NOT NULL DEFAULT '0'," +
+                "  PRIMARY KEY (`UserID`)" +
+                ") ENGINE=MyISAM AUTO_INCREMENT=10001 DEFAULT CHARSET=utf8mb4;";
+
          //sql queries to create Student Table
-        STUDENT_TBL_QRY =  "CREATE TABLE `Student` (" +
+        STUDENT_TBL_QRY =  "CREATE TABLE `S_Student` (" +
                             "  `StudentID` int(10) NOT NULL AUTO_INCREMENT," +
                             "  `FullName` varchar(50) NOT NULL DEFAULT ''," +
                             "  `YearLevel` int(10) NOT NULL," +
@@ -62,14 +71,14 @@ public class DatabaseUtility {
                             ") ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;";
         
          //sql queries to create Subject Table
-        SUBJECT_TBL_QRY =  "CREATE TABLE `Subject` (" +
+        SUBJECT_TBL_QRY =  "CREATE TABLE `S_Subject` (" +
                             "  `SubjectID` int(10) NOT NULL AUTO_INCREMENT," +
                             "  `Name` varchar(255) NOT NULL DEFAULT ''," +
                             "  PRIMARY KEY (`SubjectID`)" +
                             ") ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;";
         
          //sql queries to create Assessment Table
-        ASSESSMENT_TBL_QRY =  "CREATE TABLE `Assessment` (" +
+        ASSESSMENT_TBL_QRY =  "CREATE TABLE `S_Assessment` (" +
                             "  `SubjectID` int(10) NOT NULL," +
                             "  `AssessmentID` varchar(5) NOT NULL," +
                             "  `Type` varchar(100) NOT NULL DEFAULT ''," +
@@ -80,7 +89,7 @@ public class DatabaseUtility {
                             ") ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;";
         
          //sql queries to create Grade Table
-        GRADE_TBL_QRY =  "CREATE TABLE `Grade` (" +
+        GRADE_TBL_QRY =  "CREATE TABLE `S_Grade` (" +
                             "  `GradeId` int(10) NOT NULL AUTO_INCREMENT," +
                             "  `Achievement` varchar(255) NOT NULL," +
                             "  `Knowledge` varchar(255) NOT NULL," +
@@ -89,24 +98,29 @@ public class DatabaseUtility {
                             ") ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;";
         
         //sql queries to create StudentGrade Table
-        STUDENTGRADE_TBL_QRY =  "CREATE TABLE `StudentGrade` (" +
+        STUDENTGRADE_TBL_QRY =  "CREATE TABLE `S_StudentGrade` (" +
                             "  `StudentID` int(10) NOT NULL," +
                             "  `SubjectID` int(10) NOT NULL," +
                             "  `AssessmentID` varchar(5) NOT NULL," +
                             "  `GradeID` int(10) NOT NULL," +
                             "  PRIMARY KEY (`StudentID`,`SubjectID`,`AssessmentID`,`GradeID`)" +
                             ") ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;";
-        
+
+        // sql to INSERT User table
+        INSERT_USER_QRY = "INSERT INTO `S_User` VALUES " +
+                            "( null,'Rahul Dileep', '123456','1','0')," +
+                            "( null,'Wei Li',  '123456','1','0'),"+
+                            "( null, 'Steve Smith',  '123456','1','0')";
+
         // sql to INSERT student table
-        INSERT_STUDENT_QRY = "INSERT INTO `Student` VALUES "
-                          + "('1210789', 'John Clarke', '11')," +
-                            "('1234564', 'Peter White', '11')," +
-                            "('1234378', 'Lily Li', '11')," +
-                            "('2371231', 'Lisa Soon', '11')," +
-                            "('1283742', 'Tom Dixon', '11');";
+        INSERT_STUDENT_QRY = "INSERT INTO `S_Student` VALUES ('1', 'John Clarke', '11')," +
+                "('2', 'Peter White', '11')," +
+                "('3', 'Lily Li', '11')," +
+                "('4', 'Lisa Soon', '11')," +
+                "('5', 'Tom Dixon', '11');";
         
         // sql to INSERT Subject table
-        INSERT_SUBJECT_QRY = "INSERT INTO `Subject` (`Name`) VALUES "
+        INSERT_SUBJECT_QRY = "INSERT INTO `S_Subject` (`Name`) VALUES "
                           + "('English')," +
                             "('Maths B')," +
                             "('Biology')," +
@@ -114,7 +128,7 @@ public class DatabaseUtility {
                             "('Religion and Ethics');";
         
         // sql to INSERT Grade table
-        INSERT_GRADE_QRY = "INSERT INTO `Grade` (`Achievement`,`Knowledge`,`Skill`) VALUES "
+        INSERT_GRADE_QRY = "INSERT INTO `S_Grade` (`Achievement`,`Knowledge`,`Skill`) VALUES "
                           + "('Very high', 'thorough understanding', 'uses a high level of skill in both familiar\n" +
 "and new situations')," +
                             "('High', 'clear understanding', 'uses a high level of skill in familiar\n" +
@@ -133,6 +147,7 @@ public class DatabaseUtility {
     public boolean createDBtables()
     {
         boolean dbExists = false;
+        boolean tblUserExist = false;
         boolean tblStudentExist = false;
         boolean tblSubjectExist = false;
         boolean tblAssessmentExist = false;
@@ -141,13 +156,13 @@ public class DatabaseUtility {
         //Register MySql database driver
         try {
 	      Class.forName("com.mysql.jdbc.Driver");
-	} catch (ClassNotFoundException e) {
-		System.out.println("Where is your MySQL JDBC Driver?");
-		e.printStackTrace();
-		return false;
-	}
-      	System.out.println("MySQL JDBC Driver Registered!"); 
-	//connect to MySql ;
+        } catch (ClassNotFoundException e) {
+            System.out.println("Where is your MySQL JDBC Driver?");
+            e.printStackTrace();
+            return false;
+        }
+            System.out.println("MySQL JDBC Driver Registered!");
+        //connect to MySql ;
         try {
                 sqlConnection = DriverManager.getConnection(MYSQL_URL, USER_NAME, PASSWORD);
                 statement = sqlConnection.createStatement();
@@ -157,16 +172,16 @@ public class DatabaseUtility {
                   return false;
         }
         //chack whether the databse exists.
-         try {
+        try {
              //get the list of databases
              ResultSet dbData = sqlConnection.getMetaData().getCatalogs();
              String databaseName ="";      
              //iterate each catalog in the ResultSet 
              while (dbData.next()) {
-             // Get the database name, which is at position 1
+                        // Get the database name, which is at position 1
                       databaseName = dbData.getString(1);
-                      // Test print of database names, can be removed
-                     // System.out.printf("%s ",databaseName);  
+                        // Test print of database names, can be removed
+                        // System.out.printf("%s ",databaseName);
                       if (databaseName.equalsIgnoreCase(DATABASE_NAME) )
                          dbExists = true;
              }
@@ -184,19 +199,24 @@ public class DatabaseUtility {
              ResultSet rs = dbmd.getTables(null, null, "%", null);
              
              while (rs.next()) {
-                     if((rs.getString(3).equalsIgnoreCase("Student")))
-                       tblStudentExist = true;
-                     if((rs.getString(3).equalsIgnoreCase("Subject")))
+                     if((rs.getString(3).equalsIgnoreCase("S_User")))
+                         tblUserExist = true;
+                     if((rs.getString(3).equalsIgnoreCase("S_Student")))
+                        tblStudentExist = true;
+                     if((rs.getString(3).equalsIgnoreCase("S_Subject")))
                          tblSubjectExist = true;
-                     if((rs.getString(3).equalsIgnoreCase("Assessment")))
+                     if((rs.getString(3).equalsIgnoreCase("S_Assessment")))
                          tblAssessmentExist = true;
-                     if((rs.getString(3).equalsIgnoreCase("Grade")))
+                     if((rs.getString(3).equalsIgnoreCase("S_Grade")))
                          tblGradeExist = true;
-                     if((rs.getString(3).equalsIgnoreCase("StudentGrade")))
+                     if((rs.getString(3).equalsIgnoreCase("S_StudentGrade")))
                          tblStudentGradeExist = true;
              }
              //if any of the tables doesn't exist create table executing the query
-          
+             if (!tblUserExist){
+                 statement.executeUpdate(USER_TBL_QRY);
+                 statement.executeUpdate(INSERT_USER_QRY);
+             }
              if (!tblStudentExist){
                 statement.executeUpdate(STUDENT_TBL_QRY);
                 statement.executeUpdate(INSERT_STUDENT_QRY);
@@ -219,12 +239,12 @@ public class DatabaseUtility {
                 statement.executeUpdate(STUDENTGRADE_TBL_QRY);
               }
         } catch (SQLException e) {
-		System.out.println("Connection Failed! Check output console");
+		        System.out.println("Connection Failed! Check output console");
                 System.out.println("SQLException: " + e.getMessage());
                 System.out.println("SQLState: " + e.getSQLState());
-                   e.printStackTrace();
-		return false;
-	}
+                e.printStackTrace();
+		        return false;
+	    }
         return true;
     }
     
@@ -274,11 +294,11 @@ public class DatabaseUtility {
              // loop through data stored in file
              for(String[] res:result){
                 // Creating prepared statement to insert record
-                addRecord   = dbConnection.prepareStatement( "INSERT INTO Assessment " +
+                addRecord   = dbConnection.prepareStatement( "INSERT INTO S_Assessment " +
                         "(SubjectID, AssessmentID, Type, Topic,Format, DueDate)" +
                                    "VALUES (?,?,?,?,?,?)");  
                 // DB query to fetch subject id from subject name
-                subjectQuery   = dbConnection.prepareStatement( "SELECT * FROM subject WHERE Name = ?"); 
+                subjectQuery   = dbConnection.prepareStatement( "SELECT * FROM S_Subject WHERE Name = ?");
                 subjectQuery.setString(1, res[0]);
                 ResultSet rs = subjectQuery.executeQuery();
                 
@@ -317,7 +337,7 @@ public class DatabaseUtility {
             if  (dbConnection  == null)//connect to MySql ;
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
             // get the list of assessment
-            assessmentRec   = dbConnection.prepareStatement( "SELECT  * FROM assessment WHERE SubjectID = ?;"); 
+            assessmentRec   = dbConnection.prepareStatement( "SELECT  * FROM S_Assessment WHERE SubjectID = ?;");
             assessmentRec.setInt(1, subjectID);
             ResultSet rs = assessmentRec.executeQuery();
             
@@ -346,7 +366,7 @@ public class DatabaseUtility {
             if  (dbConnection  == null)//connect to MySql ;
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
             // get the list of subject
-            subjRec   = dbConnection.prepareStatement( "SELECT * FROM subject"); 
+            subjRec   = dbConnection.prepareStatement( "SELECT * FROM S_Subject");
             ResultSet rs = subjRec.executeQuery();
             
              // Loop through subject list and store in linked list of Subject class
@@ -375,7 +395,7 @@ public class DatabaseUtility {
             if  (dbConnection  == null)//connect to MySql ;
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
             // get the list of Student
-            studRec   = dbConnection.prepareStatement( "SELECT * FROM student"); 
+            studRec   = dbConnection.prepareStatement( "SELECT * FROM S_Student");
             ResultSet rs = studRec.executeQuery();
             
             // Loop through student record and store in linked list of Student class
@@ -403,7 +423,7 @@ public class DatabaseUtility {
             if  (dbConnection  == null)//connect to MySql ;
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
             // get the list of grade
-            gradeRec   = dbConnection.prepareStatement( "SELECT * FROM grade"); 
+            gradeRec   = dbConnection.prepareStatement( "SELECT * FROM S_Grade");
             ResultSet rs = gradeRec.executeQuery();
             
             // Loop through grade record and store in linked list of Grade class
@@ -430,7 +450,7 @@ public class DatabaseUtility {
             if  (dbConnection  == null)//connect to MySql ;
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);
                  // get the list of student grade
-                grdQuery   = dbConnection.prepareStatement( "SELECT * FROM studentgrade WHERE StudentID = ? AND SubjectID = ? AND AssessmentID = ?"); 
+                grdQuery   = dbConnection.prepareStatement( "SELECT * FROM S_Studentgrade WHERE StudentID = ? AND SubjectID = ? AND AssessmentID = ?");
                 grdQuery.setInt(1, studentId);
                 grdQuery.setInt(2, subjectId);
                 grdQuery.setString(3, assessmentId);
@@ -466,7 +486,7 @@ public class DatabaseUtility {
                 recordExist = checkAssignmentGraded(studentId, subjectId, assessmentId);
                 // If assignment is already graded for student then just update previous record 
                 if(recordExist){
-                  updateRecord   = dbConnection.prepareStatement( "UPDATE studentgrade " +
+                  updateRecord   = dbConnection.prepareStatement( "UPDATE `S_Studentgrade " +
                         " SET GradeID = ? "+
                         " WHERE StudentID = ? AND SubjectID = ? AND AssessmentID = ? "); 
                   updateRecord.setInt(1, gradeId); 
@@ -477,7 +497,7 @@ public class DatabaseUtility {
                 }
                 // If assignment is not graded for student then just insert new record 
                 else{
-                  addRecord   = dbConnection.prepareStatement( "REPLACE INTO studentgrade " +
+                  addRecord   = dbConnection.prepareStatement( "REPLACE INTO `S_Studentgrade " +
                         "(StudentID, SubjectID, AssessmentID, GradeID)" +
                                    "VALUES (?,?,?,?)");  
                   addRecord.setInt(1, studentId);
@@ -510,10 +530,10 @@ public class DatabaseUtility {
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);   
             
             // Query to fetch grade for assessment in particular subject for student 
-            stdGradeQuery   = dbConnection.prepareStatement( "SELECT s.Name, a.*, sg.GradeID, g.* FROM studentgrade as sg "+
-                " INNER JOIN subject AS s ON sg.SubjectID = s.SubjectID "+
-                " INNER JOIN assessment as a ON (sg.AssessmentID = a.AssessmentID AND sg.SubjectID = a.SubjectID) "+
-                " INNER JOIN grade as g ON g.GradeId = sg.GradeId "+
+            stdGradeQuery   = dbConnection.prepareStatement( "SELECT s.Name, a.*, sg.GradeID, g.* FROM S_Studentgrade as sg "+
+                " INNER JOIN S_Subject AS s ON sg.SubjectID = s.SubjectID "+
+                " INNER JOIN S_Assessment as a ON (sg.AssessmentID = a.AssessmentID AND sg.SubjectID = a.SubjectID) "+
+                " INNER JOIN S_Grade as g ON g.GradeId = sg.GradeId "+
                 " WHERE sg.StudentID = ? AND sg.SubjectID = ?;"); 
             stdGradeQuery.setInt(1, studentId);
             stdGradeQuery.setInt(2, subjectId);
@@ -531,6 +551,119 @@ public class DatabaseUtility {
         e.printStackTrace();
        }
        return grdAssmnt;
+    }
+
+    /**
+     *  Vertify username unique  false - exist true - not exist
+     * @param fullName
+     * @return
+     */
+    public boolean vertifyUniqueUsername(String fullName){
+        // Declaring prepared statement
+        PreparedStatement Query;
+        ResultSet rs;
+        try {
+            if (dbConnection  == null)//connect to MySql ;
+                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);
+
+                // Query
+                Query = dbConnection.prepareStatement("SELECT * from S_User WHERE FullName = ?;");
+                Query.setString(1, fullName);
+                rs = Query.executeQuery();
+                if (rs.next())
+                    return false;
+                else
+                    return true;
+
+        }catch(SQLException e) {
+            System.out.println("Connection Failed! Check output console");
+            System.out.println("SQLException: " + e.getMessage());
+            System.out.println("SQLState: " + e.getSQLState());
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    /**
+     *  Vertify student  > 0 student is existed == 0 student is not existed
+     * @param fullName
+     * @return
+     */
+    public int vertifyExsitingStu(String fullName){
+        // Declaring prepared statement
+        PreparedStatement Query;
+        ResultSet rs;
+        try {
+            if (dbConnection  == null)//connect to MySql ;
+                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);
+
+            // Query
+            Query = dbConnection.prepareStatement("SELECT * from S_Student WHERE FullName = ?;");
+            Query.setString(1, fullName);
+            rs = Query.executeQuery();
+            if (rs.next())
+                return Integer.parseInt(rs.getString("StudentID"));
+            else
+                return 0;
+
+        }catch(SQLException e) {
+            System.out.println("Connection Failed! Check output console");
+            System.out.println("SQLException: " + e.getMessage());
+            System.out.println("SQLState: " + e.getSQLState());
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+    /**
+     *
+     * @param regInfo ['fullName', ''userType', 'password','studentID]
+     * @return
+     */
+    public int userRegister(HashMap<String, String> regInfo){
+        // Declaring prepared statement
+        PreparedStatement addRecord;
+        PreparedStatement searchQuery;
+        ResultSet rs;
+        boolean recordExist;
+        try {
+            if (dbConnection  == null)// connect to MySql
+                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);
+            // Call method to check if assignment is graded
+            recordExist = vertifyUniqueUsername(regInfo.get("fullName"));
+            // If assignment is already graded for student then just update previous record
+            if(recordExist){
+                addRecord   = dbConnection.prepareStatement( "INSERT INTO S_User " +
+                        "(FullName, Password, Type, StudentID)" +
+                        "VALUES (?,?,?,?)");
+                addRecord.setString(1, regInfo.get("fullName"));
+                addRecord.setString(2, regInfo.get("password"));
+                addRecord.setInt(3, Integer.valueOf(regInfo.get("userType")));
+                addRecord.setInt(4, Integer.valueOf(regInfo.get("studentID")));
+                addRecord.executeUpdate();
+            } else {
+                return 0;
+            }
+
+            // DB query to fetch subject id from subject name
+            searchQuery   = dbConnection.prepareStatement( "SELECT * FROM S_User WHERE FullName = ?");
+            searchQuery.setString(1, regInfo.get("fullName"));
+            rs = searchQuery.executeQuery();
+
+            // add record to assessment table
+            while (rs.next()) {
+                int userId  = Integer.parseInt(rs.getString("UserID"));
+                return userId;
+            }
+
+        }
+        catch(SQLException e) {
+            System.out.println("Connection Failed! Check output console");
+            System.out.println("SQLException: " + e.getMessage());
+            System.out.println("SQLState: " + e.getSQLState());
+            e.printStackTrace();
+        }
+        return 0;
     }
 
 }
