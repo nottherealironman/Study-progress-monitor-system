@@ -553,37 +553,6 @@ public class DatabaseUtility {
     }
 
     /**
-     *  Vertify username unique  false - exist true - not exist
-     * @param fullName
-     * @return
-     */
-    public boolean vertifyUniqueUsername(String fullName){
-        // Declaring prepared statement
-        PreparedStatement Query;
-        ResultSet rs;
-        try {
-            if (dbConnection  == null)//connect to MySql ;
-                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);
-
-                // Query
-                Query = dbConnection.prepareStatement("SELECT * from S_User WHERE FullName = ?;");
-                Query.setString(1, fullName);
-                rs = Query.executeQuery();
-                if (rs.next())
-                    return false;
-                else
-                    return true;
-
-        }catch(SQLException e) {
-            System.out.println("Connection Failed! Check output console");
-            System.out.println("SQLException: " + e.getMessage());
-            System.out.println("SQLState: " + e.getSQLState());
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    /**
      *  Vertify student  > 0 student is existed == 0 student is not existed
      * @param fullName
      * @return
@@ -600,23 +569,60 @@ public class DatabaseUtility {
             Query = dbConnection.prepareStatement("SELECT * from S_Student WHERE FullName = ?;");
             Query.setString(1, fullName);
             rs = Query.executeQuery();
-            if (rs.next())
-                return Integer.parseInt(rs.getString("StudentID"));
-            else
-                return 0;
-
+            if (rs.next()){
+                if(rs.getString("Password")==null)
+                    return 1;
+                else
+                    return 0;
+            } else {
+                return -1;
+            }
         }catch(SQLException e) {
             System.out.println("Connection Failed! Check output console");
             System.out.println("SQLException: " + e.getMessage());
             System.out.println("SQLState: " + e.getSQLState());
             e.printStackTrace();
         }
-        return 0;
+        return -1;
+    }
+
+    /**
+     *  Vertify admin  > 0 admin is existed == 0 admin is not existed
+     * @param fullName
+     * @return
+     */
+    public int vertifyExsitingAdmin(String fullName){
+        // Declaring prepared statement
+        PreparedStatement Query;
+        ResultSet rs;
+        try {
+            if (dbConnection  == null)//connect to MySql ;
+                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);
+
+            // Query
+            Query = dbConnection.prepareStatement("SELECT * from S_Admin WHERE FullName = ?;");
+            Query.setString(1, fullName);
+            rs = Query.executeQuery();
+            if (rs.next()){
+                if(rs.getString("Password")==null)
+                    return 1;
+                else
+                    return 0;
+            } else {
+                return -1;
+            }
+        }catch(SQLException e) {
+            System.out.println("Connection Failed! Check output console");
+            System.out.println("SQLException: " + e.getMessage());
+            System.out.println("SQLState: " + e.getSQLState());
+            e.printStackTrace();
+        }
+        return -1;
     }
 
     /**
      *
-     * @param regInfo ['fullName', ''userType', 'password','studentID]
+     * @param regInfo ['fullName', ''userType', 'password']
      * @return
      */
     public int userRegister(HashMap<String, String> regInfo){
@@ -624,37 +630,35 @@ public class DatabaseUtility {
         PreparedStatement addRecord;
         PreparedStatement searchQuery;
         ResultSet rs;
-        boolean recordExist;
+        String tableName;
+        int userId = 0;
         try {
             if (dbConnection  == null)// connect to MySql
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);
-            // Call method to check if assignment is graded
-            recordExist = vertifyUniqueUsername(regInfo.get("fullName"));
+
+            if(regInfo.get("userType").equals("1"))
+                tableName = "S_Admin";
+            else
+                tableName = "S_Student";
             // If assignment is already graded for student then just update previous record
-            if(recordExist){
-                addRecord   = dbConnection.prepareStatement( "INSERT INTO S_User " +
-                        "(FullName, Password, Type, StudentID)" +
-                        "VALUES (?,?,?,?)");
-                addRecord.setString(1, regInfo.get("fullName"));
-                addRecord.setString(2, regInfo.get("password"));
-                addRecord.setInt(3, Integer.valueOf(regInfo.get("userType")));
-                addRecord.setInt(4, Integer.valueOf(regInfo.get("studentID")));
-                addRecord.executeUpdate();
-            } else {
-                return 0;
-            }
+            addRecord   = dbConnection.prepareStatement( "UPDATE " +  tableName  +
+                    " SET Password = ? " +
+                    " WHERE FullName = ?");
+            addRecord.setString(1, regInfo.get("password"));
+            addRecord.setString(2, regInfo.get("fullName"));
+            addRecord.executeUpdate();
 
             // DB query to fetch subject id from subject name
-            searchQuery   = dbConnection.prepareStatement( "SELECT * FROM S_User WHERE FullName = ?");
+            searchQuery   = dbConnection.prepareStatement( "SELECT * FROM " + tableName + " WHERE FullName = ?");
             searchQuery.setString(1, regInfo.get("fullName"));
             rs = searchQuery.executeQuery();
 
-            // add record to assessment table
             while (rs.next()) {
-                int userId  = Integer.parseInt(rs.getString("UserID"));
-                return userId;
+                if(regInfo.get("userType").equals("1"))
+                    userId = Integer.parseInt(rs.getString("UserID"));
+                else
+                    userId = Integer.parseInt(rs.getString("StudentID"));
             }
-
         }
         catch(SQLException e) {
             System.out.println("Connection Failed! Check output console");
@@ -662,7 +666,7 @@ public class DatabaseUtility {
             System.out.println("SQLState: " + e.getSQLState());
             e.printStackTrace();
         }
-        return 0;
+        return userId;
     }
 
 }

@@ -148,28 +148,26 @@ class Connection extends Thread {
 					case "hello":
 						// Register
 						if(request.get("LoginType") != null && request.get("LoginType").equals("1")){
-							if(request.get("UserName") != null) {
-								if(dataObj.vertifyUniqueUsername(request.get("UserName")) == false){
-									outData.writeUTF("This user already existed, please login");
+							if(request.get("UserName") != null && RegInfo.get("UserName") == null) {
+								int statusId;
+								if(RegInfo.get("userType").equals("2")) {
+									// vertify unique student
+									statusId = dataObj.vertifyExsitingStu(request.get("UserName"));
+
+								} else {
+									statusId = dataObj.vertifyExsitingAdmin(request.get("UserName"));
+								}
+								// -1 user not existed;
+								if(statusId == -1) {
+									outData.writeUTF("This user is not existed");
+									outData.writeInt(0);
+									break;
+								} else if(statusId == 0) {
+									outData.writeUTF("This user already registered");
 									outData.writeInt(0);
 									break;
 								}
 
-								// verify student is existed or not
-								if(RegInfo.get("userType") != null){
-									if(RegInfo.get("userType").equals("2")) {
-										int stuId = dataObj.vertifyExsitingStu(request.get("UserName"));
-										if(stuId == 0){
-											outData.writeUTF("This studnet is not existed");
-											outData.writeInt(0);
-											break;
-										}else{
-											RegInfo.put("studentID",String.valueOf(stuId));
-										}
-									} else {
-										RegInfo.put("studentID","0");
-									}
-								}
 								RegInfo.put("fullName",request.get("UserName"));
 								outData.writeUTF("Please type your password");
 								//generate the encoded key
