@@ -101,6 +101,7 @@ class Connection extends Thread {
 	PublicKey publicKey;
 	PrivateKey privateKey;
 	HashMap<String, String> RegInfo = new HashMap<String, String>();
+	HashMap<String, String> LogInfo = new HashMap<String, String>();
 	HashMap<String, String> response;
 	public Connection (Socket aClientSocket, int tn, int client,PublicKey key, PrivateKey privateKey) {
 		publicKey =key;
@@ -189,7 +190,40 @@ class Connection extends Thread {
 						}
 						// Login
 						else if (request.get("LoginType") != null && request.get("LoginType").equals("2")){
+							if(request.get("UserName") != null) {
+								// verify if user is registered or not
+								if(LogInfo.get("userType") != null){
+									dataObj.vertifyExsitingStu(request.get("UserName"));
+									/*if(LogInfo.get("userType").equals("2")) {
 
+										int stuId = dataObj.vertifyExsitingStu(request.get("UserName"));
+										if(stuId == 0){
+											outData.writeUTF("This studnet is not existed");
+											outData.writeInt(0);
+											break;
+										}else{
+											RegInfo.put("studentID",String.valueOf(stuId));
+										}
+									} else {
+										RegInfo.put("studentID","0");
+									}*/
+								}
+								RegInfo.put("fullName",request.get("UserName"));
+								outData.writeUTF("Please type your password");
+								//generate the encoded key
+								byte[] bytesPubKey = publicKey.getEncoded();
+								System.out.println("PublicKey size in bytes: " +bytesPubKey.length);
+								//send the keysize;
+								outData.writeInt(bytesPubKey.length);
+								//send the key in bytes
+								outData.write(bytesPubKey, 0, bytesPubKey.length);
+								break;
+							}
+							else if(request.get("userType") != null){
+								LogInfo.put("userType",request.get("userType"));
+								outData.writeUTF("Please, Enter your User Id:");
+								break;
+							}
 							outData.writeUTF("Please select user type:\n 1 Administrator\n 2 Student");
 							break;
 						}

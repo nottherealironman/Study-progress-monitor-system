@@ -332,6 +332,10 @@ public class Client {
           outObj.writeObject(request);
           System.out.print(inData.readUTF()+"\n");
 
+          switch(inputUserType){
+            case 1:
+
+          }
           // user name
           int pubKeyLength = 0;
           String inputUserName;
