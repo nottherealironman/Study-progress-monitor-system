@@ -305,7 +305,7 @@ public class Client {
         String msgServer;
 
         // Welcome message to user
-        System.out.println("\n\nWelcome to Study Progress Monitor System\n");
+        System.out.println("\n\nWelcome to Study Progress Monitor System");
 
         do {
           // sent hello to server and get menu

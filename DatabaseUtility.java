@@ -53,12 +53,10 @@ public class DatabaseUtility {
         //sql query to create database.
         dbCreateSQL = "CREATE DATABASE " + DATABASE_NAME ;
         //sql queries to create User Table
-        USER_TBL_QRY =  "CREATE TABLE `S_User` (" +
+        USER_TBL_QRY =  "CREATE TABLE `S_Admin` (" +
                 "  `UserID` int(10) NOT NULL AUTO_INCREMENT," +
                 "  `FullName` varchar(50) NOT NULL DEFAULT ''," +
-                "  `Password` varchar(150) NOT NULL DEFAULT ''," +
-                "  `Type` tinyint(2) NOT NULL DEFAULT '0'," +
-                "  `StudentID` tinyint(10) NOT NULL DEFAULT '0'," +
+                "  `Password` varchar(150) NULL," +
                 "  PRIMARY KEY (`UserID`)" +
                 ") ENGINE=MyISAM AUTO_INCREMENT=10001 DEFAULT CHARSET=utf8mb4;";
 
@@ -66,6 +64,7 @@ public class DatabaseUtility {
         STUDENT_TBL_QRY =  "CREATE TABLE `S_Student` (" +
                             "  `StudentID` int(10) NOT NULL AUTO_INCREMENT," +
                             "  `FullName` varchar(50) NOT NULL DEFAULT ''," +
+                            "  `Password` varchar(150) NULL," +
                             "  `YearLevel` int(10) NOT NULL," +
                             "  PRIMARY KEY (`StudentID`)" +
                             ") ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;";
@@ -107,13 +106,13 @@ public class DatabaseUtility {
                             ") ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;";
 
         // sql to INSERT User table
-        INSERT_USER_QRY = "INSERT INTO `S_User` VALUES " +
-                            "( null,'Rahul Dileep', '123456','1','0')," +
-                            "( null,'Wei Li',  '123456','1','0'),"+
-                            "( null, 'Steve Smith',  '123456','1','0')";
+        INSERT_USER_QRY = "INSERT INTO `S_Admin` (`FullName`) VALUES " +
+                            "('Rahul Dileep')," +
+                            "('Wei Li'),"+
+                            "('Steve Smith')";
 
         // sql to INSERT student table
-        INSERT_STUDENT_QRY = "INSERT INTO `S_Student` VALUES ('1', 'John Clarke', '11')," +
+        INSERT_STUDENT_QRY = "INSERT INTO `S_Student` (`StudentID`, `FullName`, `YearLevel`) VALUES ('1', 'John Clarke', '11')," +
                 "('2', 'Peter White', '11')," +
                 "('3', 'Lily Li', '11')," +
                 "('4', 'Lisa Soon', '11')," +
