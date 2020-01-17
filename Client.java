@@ -332,20 +332,29 @@ public class Client {
           outObj.writeObject(request);
           System.out.print(inData.readUTF()+"\n");
 
-          switch(inputUserType){
-            case 1:
-
-          }
           // user name
           int pubKeyLength = 0;
           String inputUserName;
+          int userId;
           while (pubKeyLength == 0) {
-            inputUserName = sc.nextLine();
             request = new HashMap<String, String>();
+           /* inputUserName = sc.nextLine();
+            request.put("UserName",inputUserName);*/
+            //System.out.println("login type"+LoginType);
+            // Prompt username for registration
+            if(LoginType.equals("1")){
+              inputUserName = sc.nextLine();
+              request.put("UserName",inputUserName);
+            }
+            // Prompt userId for login
+            else if(LoginType.equals("2")){
+              userId = sc.nextInt();
+              request.put("UserId",Integer.toString(userId));
+            }
             request.put("type", "hello");
             request.put("LoginType",LoginType);
             request.put("userType",inputUserType);
-            request.put("UserName",inputUserName);
+
             outObj.writeObject(request);
             System.out.println(inData.readUTF());
             pubKeyLength = inData.readInt();
@@ -365,7 +374,14 @@ public class Client {
           //ecrypt the password
           byte[] encodedmessage =  encrypt(sc.nextLine());
           request = new HashMap<String, String>();
-          request.put("type","register");
+          // Registration request
+          if(LoginType.equals("1")){
+            request.put("type","register");
+          }
+          // Login request
+          else if(LoginType.equals("2")){
+            request.put("type","login");
+          }
           outObj.writeObject(request);
           //send the encrypted password length
           outData.writeInt(encodedmessage.length);

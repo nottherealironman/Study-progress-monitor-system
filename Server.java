@@ -188,25 +188,29 @@ class Connection extends Thread {
 						}
 						// Login
 						else if (request.get("LoginType") != null && request.get("LoginType").equals("2")){
-							if(request.get("UserName") != null) {
+							if(request.get("UserId") != null) {
 								// verify if user is registered or not
-								if(LogInfo.get("userType") != null){
-									dataObj.vertifyExsitingStu(request.get("UserName"));
-									/*if(LogInfo.get("userType").equals("2")) {
+								int statusId;
+								if(LogInfo.get("userType").equals("2")) {
+									// vertify unique student
+									statusId = dataObj.vertifyExsitingStuById(Integer.parseInt(request.get("UserId")));
 
-										int stuId = dataObj.vertifyExsitingStu(request.get("UserName"));
-										if(stuId == 0){
-											outData.writeUTF("This studnet is not existed");
-											outData.writeInt(0);
-											break;
-										}else{
-											RegInfo.put("studentID",String.valueOf(stuId));
-										}
-									} else {
-										RegInfo.put("studentID","0");
-									}*/
+								} else {
+									statusId = dataObj.vertifyExsitingAdminById(Integer.parseInt(request.get("UserId")));
 								}
-								RegInfo.put("fullName",request.get("UserName"));
+
+								// -1 user not exist;
+								if(statusId == -1) {
+									outData.writeUTF("Sorry, the entered UserId does not exist");
+									outData.writeInt(0);
+									break;
+								} else if(statusId == 1) {
+									outData.writeUTF("Sorry, the User is not registered");
+									outData.writeInt(0);
+									break;
+								}
+
+								LogInfo.put("UserId",request.get("UserId"));
 								outData.writeUTF("Please type your password");
 								//generate the encoded key
 								byte[] bytesPubKey = publicKey.getEncoded();
@@ -242,6 +246,22 @@ class Connection extends Thread {
 							outData.writeUTF("Registration failed");
 						}
 						break;
+
+					case "login":
+						int logMsgLength = inData.readInt();
+						//read the size of encrypted message to be sent from client
+						byte [] logEncodedmessage = new byte [logMsgLength];
+						//read the encryped password sent from client
+						inData.read(logEncodedmessage,0, logEncodedmessage.length);
+						LogInfo.put("password",decrypt(logEncodedmessage));
+						boolean status = dataObj.userLogin(LogInfo);
+						if(status){
+							outData.writeUTF("Login successfull");
+						} else {
+							outData.writeUTF("Login failed");
+						}
+						break;
+
 					case "view-assessment-request":
 						// calling database method to fetch subjects
 						subjResult = dataObj.fetchSubjectList();

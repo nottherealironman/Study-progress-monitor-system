@@ -621,6 +621,76 @@ public class DatabaseUtility {
     }
 
     /**
+     *  Vertify student  > 0 student is existed == 0 student is not existed
+     * @param userId
+     * @return
+     */
+    public int vertifyExsitingStuById(int userId){
+        // Declaring prepared statement
+        PreparedStatement Query;
+        ResultSet rs;
+
+        try {
+            if (dbConnection  == null)//connect to MySql ;
+                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);
+
+            // Query
+            Query = dbConnection.prepareStatement("SELECT * from S_Student WHERE StudentID = ?;");
+            Query.setInt(1, userId);
+            rs = Query.executeQuery();
+            if (rs.next()){
+                if(rs.getString("Password")==null)
+                    return 1;
+                else
+                    return 0;
+            } else {
+                return -1;
+            }
+        }catch(SQLException e) {
+            System.out.println("Connection Failed! Check output console");
+            System.out.println("SQLException: " + e.getMessage());
+            System.out.println("SQLState: " + e.getSQLState());
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    /**
+     *  Vertify admin  > 0 admin is existed == 0 admin is not existed
+     * @param userId
+     * @return
+     */
+    public int vertifyExsitingAdminById(int userId){
+        // Declaring prepared statement
+        PreparedStatement Query;
+        ResultSet rs;
+
+        try {
+            if (dbConnection  == null)//connect to MySql ;
+                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);
+
+            // Query
+            Query = dbConnection.prepareStatement("SELECT * from S_Admin WHERE UserID = ?;");
+            Query.setInt(1, userId);
+            rs = Query.executeQuery();
+            if (rs.next()){
+                if(rs.getString("Password")==null)
+                    return 1;
+                else
+                    return 0;
+            } else {
+                return -1;
+            }
+        }catch(SQLException e) {
+            System.out.println("Connection Failed! Check output console");
+            System.out.println("SQLException: " + e.getMessage());
+            System.out.println("SQLState: " + e.getSQLState());
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    /**
      *
      * @param regInfo ['fullName', ''userType', 'password']
      * @return
@@ -640,7 +710,7 @@ public class DatabaseUtility {
                 tableName = "S_Admin";
             else
                 tableName = "S_Student";
-            // If assignment is already graded for student then just update previous record
+            // update password
             addRecord   = dbConnection.prepareStatement( "UPDATE " +  tableName  +
                     " SET Password = ? " +
                     " WHERE FullName = ?");
@@ -648,7 +718,7 @@ public class DatabaseUtility {
             addRecord.setString(2, regInfo.get("fullName"));
             addRecord.executeUpdate();
 
-            // DB query to fetch subject id from subject name
+            // fetch user by fullname
             searchQuery   = dbConnection.prepareStatement( "SELECT * FROM " + tableName + " WHERE FullName = ?");
             searchQuery.setString(1, regInfo.get("fullName"));
             rs = searchQuery.executeQuery();
@@ -667,6 +737,51 @@ public class DatabaseUtility {
             e.printStackTrace();
         }
         return userId;
+    }
+
+    /**
+     *
+     * @param LogInfo ['userId', 'userType', 'password']
+     * @return
+     */
+    public boolean userLogin(HashMap<String, String> logInfo){
+        // Declaring prepared statement
+        PreparedStatement addRecord;
+        PreparedStatement searchQuery;
+        ResultSet rs;
+        String tableName;
+        String colName;
+        try {
+            if (dbConnection  == null)// connect to MySql
+                dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);
+
+            if(logInfo.get("userType").equals("1")){
+                tableName = "S_Admin";
+                colName = "UserID";
+            }
+            else{
+                tableName = "S_Student";
+                colName = "StudentID";
+            }
+
+            // Fetch user by userid and password
+            searchQuery   = dbConnection.prepareStatement( "SELECT * FROM " + tableName + " WHERE "+colName+" = ? AND Password = ?");
+            searchQuery.setInt(1, Integer.parseInt(logInfo.get("UserId")));
+            searchQuery.setString(1, logInfo.get("password"));
+            rs = searchQuery.executeQuery();
+
+            // if row exists then user password is correct
+            if(rs.isBeforeFirst()){
+                return true;
+            }
+        }
+        catch(SQLException e) {
+            System.out.println("Connection Failed! Check output console");
+            System.out.println("SQLException: " + e.getMessage());
+            System.out.println("SQLState: " + e.getSQLState());
+            e.printStackTrace();
+        }
+        return false;
     }
 
 }
