@@ -49,7 +49,7 @@ public class DatabaseUtility {
         DB_URL = MYSQL_URL +"/" + DATABASE_NAME;
         //initialise MySql usename and password 
         USER_NAME ="root";
-        PASSWORD = "";
+        PASSWORD = "admin";
         statement = null;
         //sql query to create database.
         dbCreateSQL = "CREATE DATABASE " + DATABASE_NAME ;
@@ -156,7 +156,7 @@ public class DatabaseUtility {
                   e.printStackTrace();
                   return false;
         }
-        //chack whether the databse exists.
+        //check whether the database exists.
          try {
              //get the list of databases
              ResultSet dbData = sqlConnection.getMetaData().getCatalogs();
@@ -532,5 +532,30 @@ public class DatabaseUtility {
        }
        return grdAssmnt;
     }
+    
+    // Method to insert a new student
+    public boolean insertNewStudent(String studentName, int yearLevel) {
+    // Declaring prepared statement
+    PreparedStatement addRecord;
+    try {
+    //if (dbConnection == null) { // connect to MySql
+    dbConnection = DriverManager.getConnection(DB_URL, USER_NAME, PASSWORD);
+    // given student is a new entry, insert into table
+    addRecord = dbConnection
+    .prepareStatement("INSERT INTO SPMS.Student (FullName, YearLevel) VALUES (?,?);");
+    addRecord.setString(1, studentName);
+    addRecord.setInt(2, yearLevel);
+    addRecord.execute();
+    //}
+    } catch (SQLException e) {
+    System.out.println("Connection Failed! Check output console");
+    System.out.println("SQLException: " + e.getMessage());
+    System.out.println("SQLState: " + e.getSQLState());
+    e.printStackTrace();
+    return false;
+    }
+    return true;
+    }
+
 
 }
