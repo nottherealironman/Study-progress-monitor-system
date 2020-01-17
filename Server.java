@@ -186,8 +186,12 @@ class Connection extends Thread {
 							}
 							outData.writeUTF("Please select user type:\n 1 Administrator\n 2 Studnet");
 							break;
-						} else if (request.get("LoginType") != null && request.get("LoginType").equals("1")){
-						// login
+						}
+						// Login
+						else if (request.get("LoginType") != null && request.get("LoginType").equals("2")){
+
+							outData.writeUTF("Please select user type:\n 1 Administrator\n 2 Student");
+							break;
 						}
 						printMsg = "1 New User\n2 Registered User";
 						outData.writeUTF(printMsg);

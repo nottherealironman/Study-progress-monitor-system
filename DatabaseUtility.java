@@ -198,7 +198,7 @@ public class DatabaseUtility {
              ResultSet rs = dbmd.getTables(null, null, "%", null);
              
              while (rs.next()) {
-                     if((rs.getString(3).equalsIgnoreCase("S_User")))
+                     if((rs.getString(3).equalsIgnoreCase("S_Admin")))
                          tblUserExist = true;
                      if((rs.getString(3).equalsIgnoreCase("S_Student")))
                         tblStudentExist = true;
