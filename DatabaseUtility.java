@@ -744,13 +744,14 @@ public class DatabaseUtility {
      * @param LogInfo ['userId', 'userType', 'password']
      * @return
      */
-    public boolean userLogin(HashMap<String, String> logInfo){
+    public String userLogin(HashMap<String, String> logInfo){
         // Declaring prepared statement
         PreparedStatement addRecord;
         PreparedStatement searchQuery;
         ResultSet rs;
         String tableName;
         String colName;
+        String userName = null;
         try {
             if (dbConnection  == null)// connect to MySql
                 dbConnection = DriverManager.getConnection (DB_URL, USER_NAME, PASSWORD);
@@ -767,12 +768,14 @@ public class DatabaseUtility {
             // Fetch user by userid and password
             searchQuery   = dbConnection.prepareStatement( "SELECT * FROM " + tableName + " WHERE "+colName+" = ? AND Password = ?");
             searchQuery.setInt(1, Integer.parseInt(logInfo.get("UserId")));
-            searchQuery.setString(1, logInfo.get("password"));
+            searchQuery.setString(2, logInfo.get("password"));
             rs = searchQuery.executeQuery();
 
             // if row exists then user password is correct
-            if(rs.isBeforeFirst()){
-                return true;
+            //if(rs.isBeforeFirst()){
+
+            if(rs.next()){
+                userName = rs.getString("FullName");
             }
         }
         catch(SQLException e) {
@@ -781,7 +784,7 @@ public class DatabaseUtility {
             System.out.println("SQLState: " + e.getSQLState());
             e.printStackTrace();
         }
-        return false;
+        return userName;
     }
 
 }

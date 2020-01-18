@@ -254,12 +254,19 @@ class Connection extends Thread {
 						//read the encryped password sent from client
 						inData.read(logEncodedmessage,0, logEncodedmessage.length);
 						LogInfo.put("password",decrypt(logEncodedmessage));
-						boolean status = dataObj.userLogin(LogInfo);
-						if(status){
-							outData.writeUTF("Login successfull");
+						String userName = dataObj.userLogin(LogInfo);
+						HashMap<String, String> loginResponse = new HashMap<String, String>();
+						if(userName != null){
+							loginResponse.put("status","success");
+							loginResponse.put("message","Logged in successfully");
+							loginResponse.put("userName",userName);
+
 						} else {
-							outData.writeUTF("Login failed");
+							loginResponse.put("status","fail");
+							loginResponse.put("message","Invalid login credentials. Please, try again");
+							//outData.writeUTF("Invalid login credentials");
 						}
+						outObj.writeObject(loginResponse);
 						break;
 
 					case "view-assessment-request":

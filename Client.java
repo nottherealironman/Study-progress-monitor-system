@@ -301,7 +301,7 @@ public class Client {
         int optInput;
         int optSubj;
         int optStud;
-        String user;
+        String user = "";
         String msgServer;
 
         // Welcome message to user
@@ -335,7 +335,8 @@ public class Client {
           // user name
           int pubKeyLength = 0;
           String inputUserName;
-          int userId;
+          String userId;
+          String password;
           while (pubKeyLength == 0) {
             request = new HashMap<String, String>();
            /* inputUserName = sc.nextLine();
@@ -348,8 +349,8 @@ public class Client {
             }
             // Prompt userId for login
             else if(LoginType.equals("2")){
-              userId = sc.nextInt();
-              request.put("UserId",Integer.toString(userId));
+              userId = sc.nextLine();
+              request.put("UserId",userId);
             }
             request.put("type", "hello");
             request.put("LoginType",LoginType);
@@ -371,8 +372,10 @@ public class Client {
             publicKey = keyFactory.generatePublic(pubKeySpec);
           }
 
+          // Prompt user for password
+          password = sc.nextLine();
           //ecrypt the password
-          byte[] encodedmessage =  encrypt(sc.nextLine());
+          byte[] encodedmessage =  encrypt(password);
           request = new HashMap<String, String>();
           // Registration request
           if(LoginType.equals("1")){
@@ -388,12 +391,28 @@ public class Client {
           //send the encrypted password in bytes
           outData.write(encodedmessage, 0, encodedmessage.length);
 
-          System.out.println(inData.readUTF());
+          HashMap<String, String> loginResponse;
+          // Registration response handle
+          if(LoginType.equals("1")){
+            System.out.println(inData.readUTF());
+          }
+          // Login response handle
+          else if(LoginType.equals("2")){
+            loginResponse = (HashMap) inObj.readObject();
+            // If success status is received then allow user to view menu and display welcome message
+            if(loginResponse.get("status").equals("success")){
+              userType = Integer.parseInt(inputUserType);
+              user = loginResponse.get("userName");
+              if(userType == 1 )
+                user +=" (Administrator)";
+              else
+                user +=" (Parents/Students)";
+            }
+            // Display success or failure message received from server
+            System.out.println(loginResponse.get("message"));
+          }
         } while (userType==0);
 
-        userType = sc.nextInt();
-        // Set user string depending upon user type
-        user = (userType == 1 )? "Administrator" : "Parents/Students";
         // Display the menu until user choose option
         do{
                System.out.printf("\nWelcome %s \n",user); // Welcome message for user
