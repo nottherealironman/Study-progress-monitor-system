@@ -485,7 +485,7 @@ public class DatabaseUtility {
                 recordExist = checkAssignmentGraded(studentId, subjectId, assessmentId);
                 // If assignment is already graded for student then just update previous record 
                 if(recordExist){
-                  updateRecord   = dbConnection.prepareStatement( "UPDATE `S_Studentgrade " +
+                  updateRecord   = dbConnection.prepareStatement( "UPDATE S_Studentgrade " +
                         " SET GradeID = ? "+
                         " WHERE StudentID = ? AND SubjectID = ? AND AssessmentID = ? "); 
                   updateRecord.setInt(1, gradeId); 
@@ -496,7 +496,7 @@ public class DatabaseUtility {
                 }
                 // If assignment is not graded for student then just insert new record 
                 else{
-                  addRecord   = dbConnection.prepareStatement( "REPLACE INTO `S_Studentgrade " +
+                  addRecord   = dbConnection.prepareStatement( "REPLACE INTO S_Studentgrade " +
                         "(StudentID, SubjectID, AssessmentID, GradeID)" +
                                    "VALUES (?,?,?,?)");  
                   addRecord.setInt(1, studentId);
