@@ -49,7 +49,7 @@ public class DatabaseUtility {
         DB_URL = MYSQL_URL +"/" + DATABASE_NAME;
         //initialise MySql usename and password 
         USER_NAME ="root";
-        PASSWORD = "";
+        PASSWORD = "admin";
         statement = null;
         //sql query to create database.
         dbCreateSQL = "CREATE DATABASE " + DATABASE_NAME ;

@@ -1,6 +1,7 @@
 import java.net.*;
 import java.io.*;
 import java.util.*;
+import java.util.stream.*;
 
 public class Server {
 	private static int clientCount;
@@ -86,6 +87,7 @@ class Connection extends Thread {
 				        break;
 
 				    case "student-list-request":
+				    	synchronized(this.getClass()){
 				    	// calling database method to fetch students
 				    	studResult = dataObj.fetchStudentList();
 				    	// Storing list of students in StudentList
@@ -93,6 +95,7 @@ class Connection extends Thread {
 						// sending the response to client
 				    	outObj.writeObject(studList);
 				    	break;
+				    	}
 
 				    case "grade-list-request":
 				    	// calling database method to fetch grades
@@ -127,40 +130,48 @@ class Connection extends Thread {
 				        break;
 				        
 				    case "add-student-request":
-				    	// Creating response of HashMap type to send to client
-				    	HashMap response1 = new HashMap();
-				    	boolean caper = false;
-
-				    	// calling database method to fetch students
-				    	studResult = dataObj.fetchStudentList();
-				    	// Iterate through list of students, verify new student do no exist already ; use streams/lambdas instead
-				    	for (Student stud : studResult) {
-				    	if (stud.getFullName().equalsIgnoreCase(request.get("name").trim())){
-				    	System.out.println("Student already exists.");
-				    	response1.put("status","fail");
-				    	response1.put("reason","student name already exists");
-				    	response1.put("data",stud.getFullName());
-				    	caper=true;
-				    	break;
-				}
-			}
-				    	if (!caper) {
-				    		// calling database method to insert new student into a database
-				    		dbStatus = dataObj.insertNewStudent(request.get("name").trim(), Integer.parseInt(request.get("year").trim()));
-				    		// if student grade is inserted successfully then send success status to client else send fail status
-				    		if(dbStatus){
-				    		response1.put("status","success");
-				    		response1.put("data",request.get("name").trim());
-				    		} else{
-				    			response1.put("status","fail");
-				    			response1.put("reason","something went wrong while performing db insert");
-				    			response1.put("data",request.get("name"));
-				    			}
-				    			}
-				    			// sending the response to client
-				    			outObj.writeObject(response1);
-				    			break;
-				}
+				    	synchronized(this.getClass()){
+					    	// Creating response of HashMap type to send to client
+					    	HashMap response1 = new HashMap();
+					    	boolean caper = false;
+	
+					    	// calling database method to fetch students
+					    	studResult = dataObj.fetchStudentList();
+					    	// Iterate through list of students, verify new student do no exist already ;
+					    	
+					    	// lambda expression in filter checks if object exists
+					    	// streams return obj if found or else null
+					    	Student std = studResult.stream()
+					    			.filter(e -> e.getFullName().equalsIgnoreCase(request.get("name").trim()))
+					    			.findFirst()
+					    			.orElse(null);
+					    	
+					    	// student name found in list
+					    	if(std!=null) {
+					    		System.out.println("Student already exists.");
+							    response1.put("status","fail");
+							    response1.put("reason","student name already exists");
+							    response1.put("data",std.getFullName());
+							    caper=true;
+					    	}
+					    	if (!caper) {
+					    		// calling database method to insert new student into a database
+					    		dbStatus = dataObj.insertNewStudent(request.get("name").trim(), Integer.parseInt(request.get("year").trim()));
+					    		// if student grade is inserted successfully then send success status to client else send fail status
+					    		if(dbStatus){
+						    		response1.put("status","success");
+						    		response1.put("data",request.get("name").trim());
+						    	} else{
+					    			response1.put("status","fail");
+					    			response1.put("reason","something went wrong while performing db insert");
+					    			response1.put("data",request.get("name"));
+					    		}
+					    	}
+					   		// sending the response to client
+					 		outObj.writeObject(response1);
+					   		break;
+				    	}
+				   }
 	        }
 		}
 		// Catch end of file exception
