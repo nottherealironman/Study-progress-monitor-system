@@ -256,6 +256,7 @@ class Connection extends Thread {
 						LogInfo.put("password",decrypt(logEncodedmessage));
 						String userName = dataObj.userLogin(LogInfo);
 						HashMap<String, String> loginResponse = new HashMap<String, String>();
+						// Send response to client
 						if(userName != null){
 							loginResponse.put("status","success");
 							loginResponse.put("message","Logged in successfully");
@@ -264,7 +265,6 @@ class Connection extends Thread {
 						} else {
 							loginResponse.put("status","fail");
 							loginResponse.put("message","Invalid login credentials. Please, try again");
-							//outData.writeUTF("Invalid login credentials");
 						}
 						outObj.writeObject(loginResponse);
 						break;
