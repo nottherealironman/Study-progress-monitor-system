@@ -357,22 +357,20 @@ public class Client {
             request.put("type", "hello");
             request.put("LoginType",LoginType);
             request.put("userType",inputUserType);
-
             outObj.writeObject(request);
             System.out.println(inData.readUTF());
             pubKeyLength = inData.readInt();
           }
-          if(publicKey == null && pubKeyLength > 0) {
-            //read the size PublicKey
-            bytesPublicKey = new byte[pubKeyLength];
-            //read the PublicKey in bytes sent from the sever
-            inData.readFully(bytesPublicKey, 0, pubKeyLength);
-            //generate the key speciifcation for encoding
-            X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(bytesPublicKey);
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-            //extract the PublicKey
-            publicKey = keyFactory.generatePublic(pubKeySpec);
-          }
+
+          //read the size PublicKey
+          bytesPublicKey = new byte[pubKeyLength];
+          //read the PublicKey in bytes sent from the sever
+          inData.readFully(bytesPublicKey, 0, pubKeyLength);
+          //generate the key speciifcation for encoding
+          X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(bytesPublicKey);
+          KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+          //extract the PublicKey
+          publicKey = keyFactory.generatePublic(pubKeySpec);
 
           // Prompt user for password
           password = sc.nextLine();
