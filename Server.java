@@ -140,7 +140,7 @@ class Connection extends Thread {
 			// Method to create and populate tables automatically
 	        dataObj.createDBtables();
 
-	        // Parse request from client 
+	        // Parse request from client
 	        while ((request= (HashMap) inObj.readObject())!=null){
 	        	// Fetch the type of request send by client
 	        	requestType = request.get("type");
@@ -313,7 +313,7 @@ class Connection extends Thread {
 						HashMap<String, String> response = new HashMap<String, String>();
 						// if student grade is inserted successfully the send success status to client else send fail status
 						if(dbStatus){
-							response.put("status","success");	
+							response.put("status","success");
 						}
 						else{
 							response.put("status","fail");
@@ -321,24 +321,24 @@ class Connection extends Thread {
 						// sending the response to client
 						outObj.writeObject(response);
 				        break;
-				        
+
 				    case "add-student-request":
 				    	synchronized(this.getClass()){
 					    	// Creating response of HashMap type to send to client
 					    	HashMap response1 = new HashMap();
 					    	boolean caper = false;
-	
+
 					    	// calling database method to fetch students
 					    	studResult = dataObj.fetchStudentList();
 					    	// Iterate through list of students, verify new student do no exist already ;
-					    	
+
 					    	// lambda expression in filter checks if object exists
 					    	// streams return obj if found or else null
 					    	Student std = studResult.stream()
 					    			.filter(e -> e.getFullName().equalsIgnoreCase(request.get("name").trim()))
 					    			.findFirst()
 					    			.orElse(null);
-					    	
+
 					    	// student name found in list
 					    	if(std!=null) {
 					    		System.out.println("Student already exists.");

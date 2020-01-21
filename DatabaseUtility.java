@@ -48,7 +48,7 @@ public class DatabaseUtility {
         DB_URL = MYSQL_URL +"/" + DATABASE_NAME;
         //initialise MySql usename and password 
         USER_NAME ="root";
-        PASSWORD = "admin";
+        PASSWORD = "";
         statement = null;
         //sql query to create database.
         dbCreateSQL = "CREATE DATABASE " + DATABASE_NAME ;
@@ -559,7 +559,7 @@ public class DatabaseUtility {
     	try {
     		dbConnection = DriverManager.getConnection(DB_URL, USER_NAME, PASSWORD);
     		addRecord = dbConnection
-    			.prepareStatement("INSERT INTO SPMS.Student (FullName, YearLevel) VALUES (?,?);");
+    			.prepareStatement("INSERT INTO S_Student (FullName, YearLevel) VALUES (?,?);");
     		addRecord.setString(1, studentName);
     		addRecord.setInt(2, yearLevel);
     		addRecord.execute();
