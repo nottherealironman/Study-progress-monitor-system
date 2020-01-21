@@ -170,8 +170,8 @@ public class DatabaseUtility {
                   e.printStackTrace();
                   return false;
         }
-        //chack whether the databse exists.
-        try {
+        //check whether the database exists.
+         try {
              //get the list of databases
              ResultSet dbData = sqlConnection.getMetaData().getCatalogs();
              String databaseName ="";      
@@ -550,6 +550,27 @@ public class DatabaseUtility {
         e.printStackTrace();
        }
        return grdAssmnt;
+    }
+    
+    // Method to insert a new student
+    public boolean insertNewStudent(String studentName, int yearLevel) {
+    	// Declaring prepared statement
+    	PreparedStatement addRecord;
+    	try {
+    		dbConnection = DriverManager.getConnection(DB_URL, USER_NAME, PASSWORD);
+    		addRecord = dbConnection
+    			.prepareStatement("INSERT INTO S_Student (FullName, YearLevel) VALUES (?,?);");
+    		addRecord.setString(1, studentName);
+    		addRecord.setInt(2, yearLevel);
+    		addRecord.execute();
+    	} catch (SQLException e) {
+    		System.out.println("Connection Failed! Check output console");
+    		System.out.println("SQLException: " + e.getMessage());
+    		System.out.println("SQLState: " + e.getSQLState());
+    		e.printStackTrace();
+    		return false;
+    	}
+    return true;
     }
 
     /**

@@ -294,10 +294,12 @@ public class Client {
         String optOne = "1. List of assessments for a chosen subject";
         String optTwo = "2. Grades of assessments for a student";
         String optThree = "3. Set grade for a chosen student and subject";
+        String optFour = "4. Add a student";
 
         String viewAsses = "Choose the subject from below list to view assessment:\n";
         String viewGrd = "Choose the Student from below list to view assessment grades:\n";
         String setGrd = "Choose the Student from below list to set grades:\n";
+        String addStd = "Enter Student full name and year level(11,12) comma seperated:\n";
         int optInput;
         int optSubj;
         int optStud;
@@ -424,6 +426,7 @@ public class Client {
                 // Display set grade menu only to Administrator
                 if(userType == 1){
                   System.out.println(optThree);
+                  System.out.println(optFour);
                 }
 
                 // prompt for user input
@@ -573,6 +576,58 @@ public class Client {
                       }
                     
                       break;
+                  case 4:
+                    // Add a student
+
+                    if(userType == 1){ // Add student is accessed by Administrator only
+                      do{
+                        // Create Hashmap for request/response to/from server
+                        /*HashMap<String, String> */request = new HashMap<String, String>();
+                        /*HashMap<String, String> */response = new HashMap<String, String>();
+                        System.out.println(addStd);
+                        // Read user input string
+                        Scanner sc2 = new Scanner(System.in);
+                        String s_inp = sc2.nextLine();
+                        //Handle empty string, parse input; make sure it has comma.
+                        if (s_inp.length() != 0 && s_inp.contains(",")) {
+                          String[] s_details = s_inp.split(",");
+                          if (s_details.length == 2) {
+                            // Store type of request, student details in hashmap and send to server
+                            request.put("type","add-student-request");
+                            request.put("name",s_details[0]);
+                            request.put("year",s_details[1]);
+
+                            outObj.writeObject(request);
+                          } else {
+                            System.out.println("\n*** Input can only have one comma. Make sure input is in format <full name>,<year> ");
+                            break;
+                          }
+                        }
+                        else {
+                          System.out.println("\n*** Empty input or no comma found. Provide input in format <full name>,<year> ");
+                          break;
+                        }
+
+                        response = (HashMap) inObj.readObject();
+                        // If success status is received then display success message or vice a versa
+                        if(response.get("status").equals("success")){
+                          System.out.printf("New student \"%s\" added successfully.\n\n",response.get("data"));
+                        } else if (response.get("status").equals("fail")) {
+                          System.out.printf("Failed to add New student \"%s\" because \"%s\".\n\n",response.get("data"), response.get("reason"));
+                        } else {
+                          System.out.printf("No response from server. Please check.");
+                        }
+
+                        break;
+
+                      }while(optStud != 0);
+                    }
+                    else {
+                      System.out.println("Sorry, invalid option!");
+                    }
+
+                    break;
+
                    // Exit application if 0 is pressed
                   case 0:
                     System.exit(0);
@@ -613,5 +668,5 @@ public class Client {
           System.out.println("close:"+e.getMessage());
         }
       }
-     }
+  }
 }
