@@ -160,11 +160,11 @@ class Connection extends Thread {
 								}
 								// -1 user not existed;
 								if(statusId == -1) {
-									outData.writeUTF("This user is not existed");
+									outData.writeUTF("Sorry, the User does not exist");
 									outData.writeInt(0);
 									break;
 								} else if(statusId == 0) {
-									outData.writeUTF("This user already registered");
+									outData.writeUTF("Sorry, the User is already registered. Please, login");
 									outData.writeInt(0);
 									break;
 								}
@@ -184,7 +184,7 @@ class Connection extends Thread {
 								outData.writeUTF("Please type your name:");
 								break;
 							}
-							outData.writeUTF("Please select user type:\n 1 Administrator\n 2 Studnet");
+							outData.writeUTF("Please select user type:\n 1. Administrator\n 2. Student");
 							break;
 						}
 						// Login
@@ -227,10 +227,10 @@ class Connection extends Thread {
 								outData.writeUTF("Please, Enter your User Id:");
 								break;
 							}
-							outData.writeUTF("Please select user type:\n 1 Administrator\n 2 Student");
+							outData.writeUTF("Please select user type:\n 1. Administrator\n 2. Student");
 							break;
 						}
-						printMsg = "1 New User\n2 Registered User";
+						printMsg = "1. User registration\n2. Login";
 						outData.writeUTF(printMsg);
 						break;
 					case "register":
