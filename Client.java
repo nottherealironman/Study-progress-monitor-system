@@ -56,7 +56,7 @@ public class Client {
         }
       }
 
-      System.out.println("\nSelect subject or press 8 to go back or press 0 to exit:");
+      System.out.println("\nSelect subject or press -1 to go back or press 0 to exit:");
       optSubj = sc.nextInt();
       
       /* If user choose between 1 to 5 choices or subjects, 
@@ -78,7 +78,7 @@ public class Client {
           System.exit(0);
       }
       // Go back to previous menu if 8 is pressed
-      else if (optSubj == 8) {
+      else if (optSubj == -1) {
           break;
       } 
       // Display invalid message for any other choices
@@ -160,7 +160,7 @@ public class Client {
         }
       }
 
-      System.out.println("\nSelect assessment or press 8 to go back or press 0 to exit:");
+      System.out.println("\nSelect assessment or press -1 to go back or press 0 to exit:");
       optAsmnt = sc.nextInt();
       
       // Check if user select valid assessment from the list
@@ -185,7 +185,7 @@ public class Client {
                 gradesVals[i] = grd.getAchievement();
                 i++;
               }
-              System.out.println("\nSelect grade or press 8 to go back or press 0 to exit:");
+              System.out.println("\nSelect grade or press -1 to go back or press 0 to exit:");
               optGrd = sc.nextInt();
 
               // Check if valid grade list is selected
@@ -207,7 +207,7 @@ public class Client {
                 if(response.get("status").equals("success")){
                   System.out.printf("Grade \"%s\" successfully set for %s in %s (%s) \n\n",gradesVals[optGrd], student.getFullName(), subject.getName(), asmntID[optAsmnt]);
                 }
-                optGrd = 8;
+                optGrd = -1;
               }
               // System exit
               else if (optGrd == 0) {
@@ -217,8 +217,8 @@ public class Client {
                   System.out.println("Sorry, invalid option!");
               }
 
-              // Go back to previous menu if 8 is pressed
-              if (optGrd == 8) {
+              // Go back to previous menu if -1 is pressed
+              if (optGrd == -1) {
                   break;
               } 
             }
@@ -240,8 +240,8 @@ public class Client {
       else if (optAsmnt == 0) {
           System.exit(0);
       }
-      // Go back to previous menu if 8 is pressed
-      else if (optAsmnt == 8) {
+      // Go back to previous menu if -1 is pressed
+      else if (optAsmnt == -1) {
           break;
       } 
       // Display invalid message
@@ -454,7 +454,7 @@ public class Client {
                             subjNames[i] = subj.getName();
                             i++;
                         }
-                        System.out.println("\nSelect subject or press 8 to go back or press 0 to exit:");
+                        System.out.println("\nSelect subject or press -1 to go back or press 0 to exit:");
                         optSubj = sc.nextInt();                        
 
                         // If user select valid option then display assessment 
@@ -465,8 +465,8 @@ public class Client {
                         else if(optSubj == 0){
                           System.exit(0);
                         }
-                        // Go back to previous menu if 8 is pressed
-                        else if(optSubj == 8){
+                        // Go back to previous menu if -1 is pressed
+                        else if(optSubj == -1){
                           break;
                         }
                         // Display invalid option message
@@ -500,19 +500,19 @@ public class Client {
                             listOfstud.add(stud);
                             i++;
                         }
-                        System.out.println("\nSelect student or press 8 to go back or press 0 to exit:");
+                        System.out.println("\nSelect student or press -1 to go back or press 0 to exit:");
                         optStud = sc.nextInt();
                         
                         // If user select valid option then display subjects enrolled by that student 
-                        if(optStud >0 && optStud <=5){
+                        if(optStud >0 && optStud <=listOfstud.size()){
                           displaySubject(listOfstud.get(optStud-1),"view grade", outObj, inObj);
                         }
                         // Exit application if 0 is pressed
                         else if(optStud == 0){
                           System.exit(0);
                         }
-                        // Go back to previous menu if 8 is pressed
-                        else if(optStud == 8){
+                        // Go back to previous menu if -1 is pressed
+                        else if(optStud == -1){
                           break;
                         }
                         // Display invalid option message
@@ -547,19 +547,19 @@ public class Client {
                               listOfstud.add(stud);
                               i++;
                           }
-                          System.out.println("\nSelect student or press 8 to go back or press 0 to exit:");
+                          System.out.println("\nSelect student or press -1 to go back or press 0 to exit:");
                           optStud = sc.nextInt();
 
                           // If user select valid option then display subjects enrolled by that student 
-                          if(optStud >0 && optStud <=5){
+                          if(optStud >0 && optStud <=listOfstud.size()){
                             displaySubject(listOfstud.get(optStud-1),"set grade",outObj, inObj);
                           }
                           // Exit application if 0 is pressed
                           else if(optStud == 0){
                             System.exit(0);
                           }
-                          // Go back to previous menu if 8 is pressed
-                          else if(optStud == 8){
+                          // Go back to previous menu if -1 is pressed
+                          else if(optStud == -1){
                             break;
                           }
                           // Display invalid option message
