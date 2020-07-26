@@ -18,9 +18,9 @@ Administrator should be able to access the SPMS to:
 
 Step 1: Open two console (terminal)
 
-Step 2: In first terminal:
-       type javac -cp . *.java
+Step 2: In first terminal: <br>
+       type javac -cp . *.java <br>
        type java -cp . Server
-       
+       <br>
 Step 3: In second terminal
        type java -cp . Client
