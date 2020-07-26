@@ -13,3 +13,14 @@ Administrator should be able to access the SPMS to:
 
 1. Set grade for a chosen student and subject
 2. Add a student 
+
+<h3>HOW TO GET STARTED?</h3>
+
+Step 1: Open two console (terminal)
+
+Step 2: In first terminal:
+       type javac -cp . *.java
+       type java -cp . Server
+       
+Step 3: In second terminal
+       type java -cp . Client
